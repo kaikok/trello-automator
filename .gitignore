@@ -1,0 +1,66 @@
+# Python-specific
+.pytest_cache/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+
+# pytest-cov
+.coverage
+htmlcov/
+
+# Virtual Environment
+venv/
+env/
+*.env
+/.vscode/settings.json
+
+# IDE/Editor specific files
+.idea/
+.vscode/
+
+# Logs and temp files
+logs/
+*.log
+*.swp
+*.swo
+*.tmp
+*.pid
+*.bak
+*.cache
+
+# Dependency directories
+site-packages/
+dist/
+build/
+*.egg-info/
+
+# Environment configuration files
+.env
+
+# Compiled files
+*.pyc
+
+# Jupyter Notebook specific files
+.ipynb_checkpoints/
+
+# Database
+*.sqlite3
+*.db
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Local configuration file
+config.py
+
+# Secret or sensitive information
+secrets.ini
+secrets.yaml
+secrets.json
+
+# Application related
+cards.json
+actions.json

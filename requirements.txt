@@ -1,0 +1,6 @@
+py-trello
+pytest
+pytest-mock
+pytest-cov
+python-dotenv
+autopep8
