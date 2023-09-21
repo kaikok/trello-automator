@@ -143,62 +143,68 @@ class Test_retrieve_all_actions_from_trello:
         assert actions == results
 
 
-def test_retrieve_all_cards_from_trello(mocker):
-    board_one = mocker.Mock()
+class Test_retrieve_all_cards_from_trello:
+    def test_retrieve_all_cards(self, mocker):
+        board_one = mocker.Mock()
 
-    card_one = mocker.Mock()
-    card_two = mocker.Mock()
-    card_one.id = "card-one-id"
-    card_two.id = "card-two-id"
-    expected_result = [card_one, card_two]
-    board_one.get_cards.return_value = expected_result
+        card_one = mocker.Mock()
+        card_two = mocker.Mock()
+        card_one.id = "card-one-id"
+        card_two.id = "card-two-id"
+        expected_result = [card_one, card_two]
+        board_one.get_cards.return_value = expected_result
 
-    board_name = "board-one-name"
-    board_lookup = {"board-one-name": board_one}
-    results = daily_task.retrieve_all_cards_from_trello(
-        board_lookup, board_name)
+        board_name = "board-one-name"
+        board_lookup = {"board-one-name": board_one}
+        results = daily_task.retrieve_all_cards_from_trello(
+            board_lookup, board_name)
 
-    assert results == expected_result
-
-
-def test_save_card_lookup(mocker):
-    mocker.patch("daily_task.open", return_value="Mock FP")
-    json_dump_mock = mocker.patch("daily_task.json.dump", return_value=None)
-    daily_task.save_card_lookup({})
-    json_dump_mock.assert_called_once_with(
-        {},
-        "Mock FP",
-        indent="  ")
+        assert results == expected_result
 
 
-def test_save_action_list(mocker):
-    mocker.patch("daily_task.open", return_value="Mock FP")
-    json_dump_mock = mocker.patch("daily_task.json.dump", return_value=None)
-    daily_task.save_action_list([])
-    json_dump_mock.assert_called_once_with(
-        [],
-        "Mock FP",
-        indent="  ")
+class Test_save_card_lookup:
+    def test_save_card(self, mocker):
+        mocker.patch("daily_task.open", return_value="Mock FP")
+        mocked_json_dump = mocker.patch(
+            "daily_task.json.dump", return_value=None)
+        daily_task.save_card_lookup({})
+        mocked_json_dump.assert_called_once_with(
+            {},
+            "Mock FP",
+            indent="  ")
 
 
-def test_create_card_lookup(mocker):
-    card_one = mocker.Mock()
-    card_two = mocker.Mock()
-    card_one.id = "card-one-id"
-    card_one._json_obj = {"id": "card-one-id"}
-    card_two.id = "card-two-id"
-    card_two._json_obj = {"id": "card-two-id"}
-    card_lookup = {
-        card_one.id: card_one,
-        card_two.id: card_two}
-    card_json_lookup = {
-        card_one.id: card_one._json_obj,
-        card_two.id: card_two._json_obj}
+class Test_save_action_list:
+    def test_save_action_list(self, mocker):
+        mocker.patch("daily_task.open", return_value="Mock FP")
+        mocked_json_dump = mocker.patch(
+            "daily_task.json.dump", return_value=None)
+        daily_task.save_action_list([])
+        mocked_json_dump.assert_called_once_with(
+            [],
+            "Mock FP",
+            indent="  ")
 
-    list_of_cards = [card_one, card_two]
 
-    assert daily_task.create_card_lookup(list_of_cards) == [
-        card_lookup, card_json_lookup]
+class Test_create_card_lookup:
+    def test_create(self, mocker):
+        card_one = mocker.Mock()
+        card_two = mocker.Mock()
+        card_one.id = "card-one-id"
+        card_one._json_obj = {"id": "card-one-id"}
+        card_two.id = "card-two-id"
+        card_two._json_obj = {"id": "card-two-id"}
+        card_lookup = {
+            card_one.id: card_one,
+            card_two.id: card_two}
+        card_json_lookup = {
+            card_one.id: card_one._json_obj,
+            card_two.id: card_two._json_obj}
+
+        list_of_cards = [card_one, card_two]
+
+        assert daily_task.create_card_lookup(list_of_cards) == [
+            card_lookup, card_json_lookup]
 
 
 class Test_load_from_local:
