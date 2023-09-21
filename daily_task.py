@@ -266,9 +266,15 @@ def perform_archival(handle, action_list):
 
 
 def process_archival_job(board_lookup, archival_board_name, archival_jobs):
+    today = datetime.now()
+    current_sprint_dates = calculate_sprint_dates_for_given_date(
+        "2023-08-02T00:00:00", today.isoformat())
     for archival_job in archival_jobs:
         start_date, end_date = calculate_sprint_dates_for_given_date(
             "2023-08-02T00:00:00", archival_job["date"][0:23])
+        print((start_date, end_date))
+        if current_sprint_dates == (start_date, end_date):
+            continue
         archival_list = create_archival_list_if_not_found(
             board_lookup, archival_board_name, start_date)
         archival_job["card"].change_board(

@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 import trello
 import daily_task
 
@@ -782,29 +783,79 @@ class Test_process_archival_job:
         card = mocker.Mock()
         card.change_board.return_value = None
 
-        archival_jobs = [{"date": "2023-09-19T11:07:49.365Z", "card": card}]
+        archival_jobs = [{"date": "2023-08-10T11:07:49.365Z", "card": card}]
         list = mocker.Mock()
         list.id = "list-id-123"
 
+        faked_datetime_for_today = datetime.fromisoformat(
+            "2023-09-19T11:07:49.365")
+        mocked_datetime = mocker.Mock()
+        mocked_datetime.now.return_value = faked_datetime_for_today
+        mocker.patch("daily_task.datetime", mocked_datetime)
+
         mocked_calculate_sprint_dates_for_given_date = mocker.patch(
             "daily_task.calculate_sprint_dates_for_given_date",
-            return_value=[
-                "Start-Date-2023-08-02T00:00:00",
-                "End-Date-2023-08-16T00:00:00"])
+            side_effect=[("2023-09-13T00:00:00", "2023-09-26T00:00:00"),
+                         ("2023-08-02T00:00:00", "2023-08-15T00:00:00")])
         mocked_create_archival_list_if_not_found = mocker.patch(
             "daily_task.create_archival_list_if_not_found",
             return_value=list)
 
         daily_task.process_archival_job(
             board_lookup, archival_board_name, archival_jobs)
-        mocked_calculate_sprint_dates_for_given_date.assert_called_once_with(
-            "2023-08-02T00:00:00", archival_jobs[0]["date"][0:23])
+
+        mocked_calculate_sprint_dates_for_given_date.assert_has_calls([
+            mocker.call("2023-08-02T00:00:00",
+                        faked_datetime_for_today.isoformat()),
+            mocker.call("2023-08-02T00:00:00", archival_jobs[0]["date"][0:23])
+        ], True)
         mocked_create_archival_list_if_not_found.assert_called_once_with(
             board_lookup,
             archival_board_name,
-            "Start-Date-2023-08-02T00:00:00")
+            "2023-08-02T00:00:00")
         card.change_board.assert_called_once_with(
             "board-id-456", "list-id-123")
+
+    def test_do_not_process_current_sprint(self, mocker):
+        board_one = mocker.Mock()
+        board_one.id = "board-id-456"
+        board_name = "board-one-name"
+        board_lookup = {board_name: board_one}
+
+        archival_board_name = "board-one-name"
+
+        card = mocker.Mock()
+        card.change_board.return_value = None
+
+        archival_jobs = [{"date": "2023-09-19T11:07:49.365Z", "card": card}]
+        list = mocker.Mock()
+        list.id = "list-id-123"
+
+        faked_datetime_for_today = datetime.fromisoformat(
+            "2023-09-19T11:07:49.365")
+        mocked_datetime = mocker.Mock()
+        mocked_datetime.now.return_value = faked_datetime_for_today
+        mocker.patch("daily_task.datetime", mocked_datetime)
+
+        mocked_calculate_sprint_dates_for_given_date = mocker.patch(
+            "daily_task.calculate_sprint_dates_for_given_date",
+            side_effect=[("2023-09-13T00:00:00", "2023-09-26T00:00:00"),
+                         ("2023-09-13T00:00:00", "2023-09-26T00:00:00")])
+        mocked_create_archival_list_if_not_found = mocker.patch(
+            "daily_task.create_archival_list_if_not_found",
+            return_value=list)
+
+        daily_task.process_archival_job(
+            board_lookup, archival_board_name, archival_jobs)
+
+        mocked_datetime.now.assert_called_once()
+        mocked_calculate_sprint_dates_for_given_date.assert_has_calls([
+            mocker.call("2023-08-02T00:00:00",
+                        faked_datetime_for_today.isoformat()),
+            mocker.call("2023-08-02T00:00:00", archival_jobs[0]["date"][0:23])
+        ], True)
+        mocked_create_archival_list_if_not_found.assert_not_called()
+        card.change_board.assert_not_called()
 
 
 class Test_run:
