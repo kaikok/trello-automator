@@ -72,7 +72,7 @@ class Test_setup_board_lookup:
 
 
 class Test_retrieve_all_actions_from_trello:
-    def test_retrieve_all_actions_from_trello(self, mocker):
+    def test_less_than_1000_actions(self, mocker):
         action_list = [
             "addAttachmentToCard",
             "addChecklistToCard",
@@ -104,8 +104,50 @@ class Test_retrieve_all_actions_from_trello:
             board_lookup, board_name)
 
         board_one.fetch_actions.assert_called_once_with(
-            {"fields", "all", "filter", action_list_str})
+            {"fields", "all", "filter", action_list_str},
+            action_limit=1000)
         assert actions == results
+
+    def test_more_than_1000_actions(self, mocker):
+        action_list = [
+            "addAttachmentToCard",
+            "addChecklistToCard",
+            "addMemberToCard",
+            "commentCard",
+            "convertToCardFromCheckItem",
+            "copyCard",
+            "createCard",
+            "deleteCard",
+            "emailCard",
+            "moveCardFromBoard",
+            "moveCardToBoard",
+            "removeChecklistFromCard",
+            "removeMemberFromCard",
+            "updateCard",
+            "updateCheckItemStateOnCard",
+        ]
+        action_list_str = ','.join(action_list)
+
+        board_one = mocker.Mock()
+
+        results_one = \
+            [{"id": "action-one-id"}, {"id": "action-two-id"}] * 499 + \
+            [{"id": "action-nine-nine-nine-id"}, {"id": "action-thousand-id"}]
+        results_two = [{"id": "action-thousand-one-id"}]
+        board_one.fetch_actions.side_effect = [results_one, results_two]
+
+        board_name = "board-one-name"
+        board_lookup = {"board-one-name": board_one}
+
+        actions = daily_task.retrieve_all_actions_from_trello(
+            board_lookup, board_name)
+
+        board_one.fetch_actions.assert_has_calls([
+            mocker.call({"fields", "all", "filter", action_list_str},
+                        action_limit=1000),
+            mocker.call({"fields", "all", "filter", action_list_str},
+                        action_limit=1000, before='action-thousand-id')])
+        assert actions == results_one + results_two
 
     def test_retrieve_latest_actions_from_trello(self, mocker):
         action_list = [
@@ -140,6 +182,7 @@ class Test_retrieve_all_actions_from_trello:
 
         board_one.fetch_actions.assert_called_once_with(
             {"fields", "all", "filter", action_list_str},
+            action_limit=1000,
             since="last_action_id")
         assert actions == results
 

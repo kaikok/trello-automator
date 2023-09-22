@@ -4,6 +4,7 @@ from trello import TrelloClient
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 import math
+import time
 
 
 def init_trello_conn():
@@ -54,8 +55,18 @@ def retrieve_all_actions_from_trello(board_lookup, board_name):
         "updateCheckItemStateOnCard",
     ]
     action_list_str = ','.join(action_list)
-    return board_lookup[board_name].fetch_actions(
-        {"fields", "all", "filter", action_list_str})
+    all_actions = []
+    actions = board_lookup[board_name].fetch_actions(
+        {"fields", "all", "filter", action_list_str}, action_limit=1000)
+    all_actions = all_actions + actions
+    print(len(actions))
+    while len(actions) == 1000:
+        actions = board_lookup[board_name].fetch_actions(
+            {"fields", "all", "filter", action_list_str},
+            action_limit=1000,
+            before=all_actions[-1]['id'])
+        all_actions = all_actions + actions
+    return all_actions
 
 
 def retrieve_latest_actions_from_trello(board_lookup,
@@ -84,6 +95,7 @@ def retrieve_latest_actions_from_trello(board_lookup,
          "all",
          "filter",
          action_list_str},
+        action_limit=1000,
         since=last_action_id)
 
 
@@ -141,6 +153,7 @@ def update_card_json_lookup(
     for updated_card_id in updated_card_ids:
         updated_card = handle.get_card(updated_card_id)
         card_json_lookup[updated_card_id] = updated_card._json_obj
+        time.sleep(1)
     return card_json_lookup
 
 
@@ -237,6 +250,10 @@ def get_move_to_done_list_date(card_action_list_lookup, card_id, done_list_id):
                 action["data"].get("listAfter") and
                 action["data"]["listAfter"]["id"] == done_list_id):
             return action["date"]
+        if (action["type"] == "moveCardToBoard" and
+                action["data"].get("list") and
+                action["data"]["list"]["id"] == done_list_id):
+            return action["date"]
     return None
 
 
@@ -251,6 +268,7 @@ def find_done_card_and_create_archival_jobs(
         done_date = get_move_to_done_list_date(
             card_action_list_lookup, done_card.id, done_list.id)
         archival_jobs.append({"date": done_date, "card": done_card})
+        print(f'Add Job Move {done_card.id} {done_card.name} to {done_date}.')
     return archival_jobs
 
 
@@ -272,13 +290,18 @@ def process_archival_job(board_lookup, archival_board_name, archival_jobs):
     for archival_job in archival_jobs:
         start_date, end_date = calculate_sprint_dates_for_given_date(
             "2023-08-02T00:00:00", archival_job["date"][0:23])
-        print((start_date, end_date))
         if current_sprint_dates == (start_date, end_date):
             continue
+        print(
+            f'Executing Move '
+            f'{archival_job["card"].id} '
+            f'{archival_job["card"].name} to '
+            f'{start_date}.')
         archival_list = create_archival_list_if_not_found(
             board_lookup, archival_board_name, start_date)
         archival_job["card"].change_board(
             board_lookup[archival_board_name].id, archival_list.id)
+        time.sleep(1)
 
 
 def run():
