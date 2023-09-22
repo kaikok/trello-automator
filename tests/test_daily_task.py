@@ -356,6 +356,11 @@ class Test_update_card_json_lookup:
         card_three = mocker.Mock()
         card_three._json_obj = {"id": "abc", "updates": "existing"}
 
+        progress_bar = mocker.Mock()
+        mocked_tqdm = mocker.patch(
+            "daily_task.tqdm",
+            return_value=progress_bar)
+
         handle.get_card.side_effect = [card_one, card_two, card_three]
 
         results = daily_task.update_card_json_lookup(
@@ -363,6 +368,7 @@ class Test_update_card_json_lookup:
 
         mocked_get_card_ids_from_action_list.assert_called_once_with(
             new_action_list)
+        mocked_tqdm.assert_called()
         assert handle.mock_calls == [mocker.call.get_card(
             'xyz'), mocker.call.get_card('opq'), mocker.call.get_card('abc')]
         assert results == expected_card_json_lookup

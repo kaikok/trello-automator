@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from datetime import datetime, timedelta
 import math
 import time
+from tqdm import tqdm
 
 
 def run():
@@ -48,6 +49,7 @@ def init_trello_conn():
 
 
 def first_time_load(handle):
+    print("First time setup...")
     board_lookup = setup_board_lookup(handle)
     action_list = retrieve_all_actions_from_trello(
         board_lookup, os.getenv("BOARD_NAME"))
@@ -120,9 +122,11 @@ def save_card_lookup(card_json_lookup):
 
 
 def update_cards_and_actions(action_list, card_json_lookup, handle):
+    print("Looking for updates...")
     board_lookup = setup_board_lookup(handle)
     new_action_list = retrieve_latest_actions_from_trello(
         board_lookup, os.getenv("BOARD_NAME"), action_list[0]['id'])
+    print(f'{len(new_action_list)} new Actions found.')
     card_json_lookup = update_card_json_lookup(
         handle,
         card_json_lookup,
@@ -166,11 +170,15 @@ def retrieve_latest_actions_from_trello(board_lookup,
 def update_card_json_lookup(
         handle, card_json_lookup, new_action_list):
     updated_card_ids = get_card_ids_from_action_list(new_action_list)
-
+    total_cards = len(updated_card_ids)
+    print(f'{total_cards} Cards need to be checked for update')
+    progress_bar = tqdm(total=total_cards)
     for updated_card_id in updated_card_ids:
         updated_card = handle.get_card(updated_card_id)
         card_json_lookup[updated_card_id] = updated_card._json_obj
         time.sleep(1)
+        progress_bar.update(1)
+    progress_bar.close()
     return card_json_lookup
 
 
