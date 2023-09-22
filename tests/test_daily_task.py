@@ -420,56 +420,6 @@ class Test_update_cards_and_actions:
             card_json_lookup)
 
 
-class Test_retrieve_done_cards_from_trello:
-    def test_done_list_found(self, mocker):
-        board_one = mocker.Mock()
-        board_name = "board-one-name"
-        board_lookup = {"board-one-name": board_one}
-        done_list_name = "done"
-
-        list = mocker.Mock()
-        list.name = "done"
-        list.id = "def"
-        list.list_cards.return_value = [123, 456]
-
-        board_one.list_cards.return_value = list
-
-        mocked_retrieve_done_list_from_trello = mocker.patch(
-            "daily_task.retrieve_done_list_from_trello",
-            return_value=list)
-
-        daily_task.retrieve_done_cards_from_trello(
-            board_lookup, board_name, done_list_name)
-
-        mocked_retrieve_done_list_from_trello.assert_called_once_with(
-            board_lookup, board_name, done_list_name)
-        list.list_cards.assert_called_once()
-
-    def test_done_list_is_not_found(self, mocker):
-        board_one = mocker.Mock()
-        board_name = "board-one-name"
-        board_lookup = {"board-one-name": board_one}
-        done_list_name = "undone"
-
-        list = mocker.Mock()
-        list.name = "done"
-        list.id = "def"
-        list.list_cards.return_value = [123, 456]
-
-        board_one.list_cards.return_value = list
-
-        mocked_retrieve_done_list_from_trello = mocker.patch(
-            "daily_task.retrieve_done_list_from_trello",
-            return_value=None)
-
-        assert daily_task.retrieve_done_cards_from_trello(
-            board_lookup, board_name, done_list_name) == []
-
-        mocked_retrieve_done_list_from_trello.assert_called_once_with(
-            board_lookup, board_name, done_list_name)
-        list.list_cards.assert_not_called()
-
-
 class Test_calculate_sprint_dates_for_given_date:
     def test_given_date_at_sprint_end_date(self, mocker):
         reference_start_date = "2023-08-02T00:00:00"
