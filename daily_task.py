@@ -35,9 +35,9 @@ def load_action_list(config):
     return actions_json
 
 
-def load_card_lookup():
+def load_card_lookup(config):
     try:
-        card_json_lookup = json.load(open(os.getenv("CARDS_FILE"), "r"))
+        card_json_lookup = json.load(open(config.cards_file, "r"))
     except FileNotFoundError:
         card_json_lookup = {}
     return card_json_lookup
