@@ -304,7 +304,7 @@ class Test_first_time_load:
             "daily_task.save_card_lookup",
             return_value=None)
 
-        daily_task.first_time_load(handle)
+        daily_task.first_time_load(handle, mocked_config)
 
         mocked_setup_board_lookup.assert_called_once_with(handle)
         mocked_retrieve_all_actions_from_trello.assert_called_once_with(
@@ -418,7 +418,7 @@ class Test_update_cards_and_actions:
             return_value=None)
 
         daily_task.update_cards_and_actions(
-            action_list, card_json_lookup, handle)
+            action_list, card_json_lookup, handle, mocked_config)
 
         mocked_setup_board_lookup.assert_called_once_with(handle)
         mocked_retrieve_latest_actions_from_trello.assert_called_once_with(

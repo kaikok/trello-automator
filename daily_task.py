@@ -48,12 +48,12 @@ def init_trello_conn():
     return client
 
 
-def first_time_load(handle):
+def first_time_load(handle, config):
     print("First time setup...")
     board_lookup = setup_board_lookup(handle)
     action_list = retrieve_all_actions_from_trello(
         board_lookup, os.getenv("BOARD_NAME"))
-    save_action_list(action_list)
+    save_action_list(action_list, config)
     cards = retrieve_all_cards_from_trello(
         board_lookup, os.getenv("BOARD_NAME"))
     card_lookup, card_json_lookup = create_card_lookup(cards)
@@ -121,7 +121,7 @@ def save_card_lookup(card_json_lookup):
               open(os.getenv("CARDS_FILE"), "w"), indent="  ")
 
 
-def update_cards_and_actions(action_list, card_json_lookup, handle):
+def update_cards_and_actions(action_list, card_json_lookup, handle, config):
     print("Looking for updates...")
     board_lookup = setup_board_lookup(handle)
     new_action_list = retrieve_latest_actions_from_trello(
@@ -132,7 +132,7 @@ def update_cards_and_actions(action_list, card_json_lookup, handle):
         card_json_lookup,
         new_action_list)
     action_list = update_action_list(action_list, new_action_list)
-    save_action_list(action_list)
+    save_action_list(action_list, config)
     save_card_lookup(card_json_lookup)
     return action_list, card_json_lookup
 
