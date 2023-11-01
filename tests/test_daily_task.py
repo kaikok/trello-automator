@@ -47,8 +47,9 @@ class Test_load_card_lookup:
 
 
 class Test_init_trello_conn:
-    def test_should_return_a_trello_client(self):
-        handle = daily_task.init_trello_conn()
+    def test_should_return_a_trello_client(self, mocker):
+        mocked_daily_config = mocker.Mock()
+        handle = daily_task.init_trello_conn(mocked_daily_config)
         assert isinstance(handle, trello.trelloclient.TrelloClient)
 
     def test_should_retrieve_credentials_from_config_object(self, mocker):
@@ -287,13 +288,13 @@ class Test_load_from_local:
 class Test_first_time_load:
     def test_retrieve_all_actions_cards_and_save_them(self, mocker):
         mocked_daily_config = mocker.Mock()
+        mocked_daily_config.board_name = "board-one"
         handle = "handle"
         board_lookup = {"board-one": 123}
         action_list = [123, 456]
         cards = [789, 987]
         card_lookup = {"card_lookup": 123}
         card_json_lookup = {"card_json_lookup": 456}
-        os.environ["BOARD_NAME"] = "board-one"
 
         mocked_setup_board_lookup = mocker.patch(
             "daily_task.setup_board_lookup",
