@@ -866,6 +866,7 @@ class Test_process_archival_job:
 
 class Test_run:
     def test_empty_action_list(self, mocker):
+        mocked_config = mocker.Mock()
         action_list = []
         card_json_lookup = {}
 
@@ -889,11 +890,12 @@ class Test_run:
 
         mocked_load_from_local.assert_called_once()
         mocked_init_trello_conn.assert_called_once()
-        mocked_first_time_load.assert_called_once_with("handle")
+        mocked_first_time_load.assert_called_once_with("handle", mocked_config)
         mocked_update_cards_and_actions.assert_not_called()
         mocked_perform_archival.assert_called_once()
 
     def test_non_empty_action_list(self, mocker):
+        mocked_config = mocker.Mock()
         action_list = [123]
         card_json_lookup = {}
 
@@ -918,6 +920,6 @@ class Test_run:
         mocked_load_from_local.assert_called_once()
         mocked_init_trello_conn.assert_called_once()
         mocked_update_cards_and_actions.assert_called_once_with(
-            action_list, card_json_lookup, "handle")
+            action_list, card_json_lookup, "handle", mocked_config)
         mocked_first_time_load.assert_not_called()
         mocked_perform_archival.assert_called_once()
