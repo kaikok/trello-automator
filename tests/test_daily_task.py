@@ -914,7 +914,7 @@ class Test_run:
             "handle",
             mocked_daily_config)
         mocked_update_cards_and_actions.assert_not_called()
-        mocked_perform_archival.assert_called_once()
+        mocked_perform_archival.assert_called_once_with(mocked_daily_config)
 
     def test_non_empty_action_list(self, mocker):
         mocked_daily_config = mocker.Mock()
@@ -948,4 +948,4 @@ class Test_run:
         mocked_update_cards_and_actions.assert_called_once_with(
             action_list, card_json_lookup, "handle", mocked_daily_config)
         mocked_first_time_load.assert_not_called()
-        mocked_perform_archival.assert_called_once()
+        mocked_perform_archival.assert_called_once_with(mocked_daily_config)
