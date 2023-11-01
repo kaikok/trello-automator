@@ -276,6 +276,7 @@ class Test_load_from_local:
 
 class Test_first_time_load:
     def test_retrieve_all_actions_cards_and_save_them(self, mocker):
+        mocked_config = mocker.Mock()
         handle = "handle"
         board_lookup = {"board-one": 123}
         action_list = [123, 456]
@@ -308,7 +309,8 @@ class Test_first_time_load:
         mocked_setup_board_lookup.assert_called_once_with(handle)
         mocked_retrieve_all_actions_from_trello.assert_called_once_with(
             board_lookup, "board-one")
-        mocked_save_action_list.assert_called_once_with(action_list)
+        mocked_save_action_list.assert_called_once_with(
+            action_list, mocked_config)
         mocked_retrieve_all_cards_from_trello.assert_called_once_with(
             board_lookup, "board-one")
         mocked_create_card_lookup.assert_called_once_with(cards)
@@ -389,6 +391,7 @@ class Test_update_action_list:
 class Test_update_cards_and_actions:
     def test_retrieve_new_actions_cards_append_or_update_and_save(
             self, mocker):
+        mocked_config = mocker.Mock()
         handle = "handle"
         board_lookup = {"board-one": 123}
         action_list = [{"id": 123}, {"id": 456}]
@@ -425,7 +428,7 @@ class Test_update_cards_and_actions:
         mocked_update_action_list.assert_called_once_with(
             action_list, new_action_list)
         mocked_save_action_list.assert_called_once_with(
-            action_list)
+            action_list, mocked_config)
         mocked_save_card_lookup.assert_called_once_with(
             card_json_lookup)
 
