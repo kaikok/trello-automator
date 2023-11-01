@@ -269,7 +269,7 @@ class Test_load_from_local:
             "daily_task.load_card_lookup",
             return_value=card_json_lookup)
 
-        result = daily_task.load_from_local()
+        result = daily_task.load_from_local(mocked_daily_config)
 
         assert result[0] == action_list
         assert result[1] == card_json_lookup
@@ -895,9 +895,11 @@ class Test_run:
         daily_task.run()
 
         mocked_create_daily_config.assert_called_once()
-        mocked_load_from_local.assert_called_once()
+        mocked_load_from_local.assert_called_once_with(mocked_daily_config)
         mocked_init_trello_conn.assert_called_once()
-        mocked_first_time_load.assert_called_once_with("handle", mocked_daily_config)
+        mocked_first_time_load.assert_called_once_with(
+            "handle",
+            mocked_daily_config)
         mocked_update_cards_and_actions.assert_not_called()
         mocked_perform_archival.assert_called_once()
 
@@ -928,7 +930,7 @@ class Test_run:
         daily_task.run()
 
         mocked_create_daily_config.assert_called_once()
-        mocked_load_from_local.assert_called_once()
+        mocked_load_from_local.assert_called_once_with(mocked_daily_config)
         mocked_init_trello_conn.assert_called_once()
         mocked_update_cards_and_actions.assert_called_once_with(
             action_list, card_json_lookup, "handle", mocked_daily_config)
