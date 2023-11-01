@@ -196,15 +196,15 @@ def update_action_list(action_list, new_action_list):
     return new_action_list + action_list
 
 
-def perform_archival(handle, action_list):
+def perform_archival(handle, action_list, config):
     board_lookup = setup_board_lookup(handle)
     archival_jobs = find_done_card_and_create_archival_jobs(
         board_lookup,
-        os.getenv("BOARD_NAME"),
+        config.board_name,
         action_list,
-        os.getenv("DONE_LIST_NAME"))
+        config.done_list_name)
     process_archival_job(
-        board_lookup, os.getenv("ARCHIVAL_BOARD_NAME"), archival_jobs)
+        board_lookup, config.archival_board_name, archival_jobs)
 
 
 def find_done_card_and_create_archival_jobs(
