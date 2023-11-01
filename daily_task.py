@@ -13,17 +13,18 @@ def run():
     config = Daily_config()
     context = {}
 
-    action_list, card_json_lookup = load_from_local(config)
+    context["action_list"], context["card_json_lookup"] = load_from_local(config)
+    # context["action_list"] = action_list
 
     handle = init_trello_conn(config)
     context["handle"] = handle
 
-    if len(action_list) == 0:
+    if len(context["action_list"]) == 0:
         first_time_load(context, config)
     else:
-        action_list, card_json_lookup = update_cards_and_actions(
-            action_list, card_json_lookup, handle, config)
-    perform_archival(handle, action_list, config)
+        context["action_list"], context["card_json_lookup"] = update_cards_and_actions(
+            context, config)
+    perform_archival(handle, context["action_list"], config)
 
 
 def load_from_local(config):
@@ -128,17 +129,18 @@ def save_card_lookup(card_json_lookup, config):
               open(config.cards_file, "w"), indent="  ")
 
 
-def update_cards_and_actions(action_list, card_json_lookup, handle, config):
+def update_cards_and_actions(context, config):
     print("Looking for updates...")
-    board_lookup = setup_board_lookup(handle)
+    board_lookup = setup_board_lookup(context["handle"])
     new_action_list = retrieve_latest_actions_from_trello(
-        board_lookup, config.board_name, action_list[0]['id'])
+        board_lookup, config.board_name, context["action_list"][0]['id'])
     print(f'{len(new_action_list)} new Actions found.')
     card_json_lookup = update_card_json_lookup(
-        handle,
-        card_json_lookup,
+        context["handle"],
+        context["card_json_lookup"],
         new_action_list)
-    action_list = update_action_list(action_list, new_action_list)
+    action_list = update_action_list(
+        context["action_list"], new_action_list)
     save_action_list(action_list, config)
     save_card_lookup(card_json_lookup, config)
     return action_list, card_json_lookup
