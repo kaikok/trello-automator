@@ -59,7 +59,7 @@ def first_time_load(handle, config):
     cards = retrieve_all_cards_from_trello(
         board_lookup, os.getenv("BOARD_NAME"))
     card_lookup, card_json_lookup = create_card_lookup(cards)
-    save_card_lookup(card_json_lookup)
+    save_card_lookup(card_json_lookup, config)
     return action_list, card_lookup, card_json_lookup
 
 
@@ -135,7 +135,7 @@ def update_cards_and_actions(action_list, card_json_lookup, handle, config):
         new_action_list)
     action_list = update_action_list(action_list, new_action_list)
     save_action_list(action_list, config)
-    save_card_lookup(card_json_lookup)
+    save_card_lookup(card_json_lookup, config)
     return action_list, card_json_lookup
 
 
