@@ -290,6 +290,10 @@ class Test_first_time_load:
         mocked_daily_config = mocker.Mock()
         mocked_daily_config.board_name = "board-one"
         handle = "handle"
+        context = {
+            "handle": handle
+        }
+
         board_lookup = {"board-one": 123}
         action_list = [123, 456]
         cards = [789, 987]
@@ -315,7 +319,7 @@ class Test_first_time_load:
             "daily_task.save_card_lookup",
             return_value=None)
 
-        daily_task.first_time_load(handle, mocked_daily_config)
+        daily_task.first_time_load(context, mocked_daily_config)
 
         mocked_setup_board_lookup.assert_called_once_with(handle)
         mocked_retrieve_all_actions_from_trello.assert_called_once_with(
