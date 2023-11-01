@@ -27,9 +27,9 @@ def load_from_local():
     return action_list, card_json_lookup
 
 
-def load_action_list():
+def load_action_list(config):
     try:
-        actions_json = json.load(open(os.getenv("ACTIONS_FILE"), "r"))
+        actions_json = json.load(open(config.actions_file, "r"))
     except FileNotFoundError:
         actions_json = []
     return actions_json

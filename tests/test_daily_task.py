@@ -5,15 +5,17 @@ import daily_task
 
 
 class Test_load_action_list:
-    def test_empty_file(self):
-        os.environ["ACTIONS_FILE"] = \
+    def test_empty_file(self, mocker):
+        mocked_daily_config = mocker.Mock()
+        mocked_daily_config.actions_file = \
             os.getcwd() + "/tests/empty_action_list.json"
-        assert daily_task.load_action_list() == []
+        assert daily_task.load_action_list(mocked_daily_config) == []
 
-    def test_file_not_found(self):
-        os.environ["ACTIONS_FILE"] = \
+    def test_file_not_found(self, mocker):
+        mocked_daily_config = mocker.Mock()
+        mocked_daily_config.actions_file = \
             os.getcwd() + "/tests/not_found_action_list.json"
-        assert daily_task.load_action_list() == []
+        assert daily_task.load_action_list(mocked_daily_config) == []
 
 
 class Test_load_card_lookup:
@@ -220,12 +222,12 @@ class Test_save_card_lookup:
 
 class Test_save_action_list:
     def test_save_action_list(self, mocker):
-        mocked_config = mocker.Mock()
-        mocked_config.actions_file = "actions.json"
+        mocked_daily_config = mocker.Mock()
+        mocked_daily_config.actions_file = "actions.json"
         mocked_open = mocker.patch("daily_task.open", return_value="Mock FP")
         mocked_json_dump = mocker.patch(
             "daily_task.json.dump", return_value=None)
-        assert daily_task.save_action_list([], mocked_config) is None
+        assert daily_task.save_action_list([], mocked_daily_config) is None
         mocked_open.assert_called_once_with(
             "actions.json", "w")
         mocked_json_dump.assert_called_once_with(
@@ -276,7 +278,7 @@ class Test_load_from_local:
 
 class Test_first_time_load:
     def test_retrieve_all_actions_cards_and_save_them(self, mocker):
-        mocked_config = mocker.Mock()
+        mocked_daily_config = mocker.Mock()
         handle = "handle"
         board_lookup = {"board-one": 123}
         action_list = [123, 456]
@@ -304,13 +306,13 @@ class Test_first_time_load:
             "daily_task.save_card_lookup",
             return_value=None)
 
-        daily_task.first_time_load(handle, mocked_config)
+        daily_task.first_time_load(handle, mocked_daily_config)
 
         mocked_setup_board_lookup.assert_called_once_with(handle)
         mocked_retrieve_all_actions_from_trello.assert_called_once_with(
             board_lookup, "board-one")
         mocked_save_action_list.assert_called_once_with(
-            action_list, mocked_config)
+            action_list, mocked_daily_config)
         mocked_retrieve_all_cards_from_trello.assert_called_once_with(
             board_lookup, "board-one")
         mocked_create_card_lookup.assert_called_once_with(cards)
@@ -391,7 +393,7 @@ class Test_update_action_list:
 class Test_update_cards_and_actions:
     def test_retrieve_new_actions_cards_append_or_update_and_save(
             self, mocker):
-        mocked_config = mocker.Mock()
+        mocked_daily_config = mocker.Mock()
         handle = "handle"
         board_lookup = {"board-one": 123}
         action_list = [{"id": 123}, {"id": 456}]
@@ -418,7 +420,7 @@ class Test_update_cards_and_actions:
             return_value=None)
 
         daily_task.update_cards_and_actions(
-            action_list, card_json_lookup, handle, mocked_config)
+            action_list, card_json_lookup, handle, mocked_daily_config)
 
         mocked_setup_board_lookup.assert_called_once_with(handle)
         mocked_retrieve_latest_actions_from_trello.assert_called_once_with(
@@ -428,7 +430,7 @@ class Test_update_cards_and_actions:
         mocked_update_action_list.assert_called_once_with(
             action_list, new_action_list)
         mocked_save_action_list.assert_called_once_with(
-            action_list, mocked_config)
+            action_list, mocked_daily_config)
         mocked_save_card_lookup.assert_called_once_with(
             card_json_lookup)
 
@@ -866,13 +868,13 @@ class Test_process_archival_job:
 
 class Test_run:
     def test_empty_action_list(self, mocker):
-        mocked_config = mocker.Mock()
+        mocked_daily_config = mocker.Mock()
         action_list = []
         card_json_lookup = {}
 
         mocked_create_daily_config = mocker.patch(
             "daily_task.Daily_config",
-            return_value=mocked_config)
+            return_value=mocked_daily_config)
         mocked_load_from_local = mocker.patch(
             "daily_task.load_from_local",
             return_value=[action_list, card_json_lookup])
@@ -894,18 +896,18 @@ class Test_run:
         mocked_create_daily_config.assert_called_once()
         mocked_load_from_local.assert_called_once()
         mocked_init_trello_conn.assert_called_once()
-        mocked_first_time_load.assert_called_once_with("handle", mocked_config)
+        mocked_first_time_load.assert_called_once_with("handle", mocked_daily_config)
         mocked_update_cards_and_actions.assert_not_called()
         mocked_perform_archival.assert_called_once()
 
     def test_non_empty_action_list(self, mocker):
-        mocked_config = mocker.Mock()
+        mocked_daily_config = mocker.Mock()
         action_list = [123]
         card_json_lookup = {}
 
         mocked_create_daily_config = mocker.patch(
             "daily_task.Daily_config",
-            return_value=mocked_config)
+            return_value=mocked_daily_config)
         mocked_load_from_local = mocker.patch(
             "daily_task.load_from_local",
             return_value=[action_list, card_json_lookup])
@@ -928,6 +930,6 @@ class Test_run:
         mocked_load_from_local.assert_called_once()
         mocked_init_trello_conn.assert_called_once()
         mocked_update_cards_and_actions.assert_called_once_with(
-            action_list, card_json_lookup, "handle", mocked_config)
+            action_list, card_json_lookup, "handle", mocked_daily_config)
         mocked_first_time_load.assert_not_called()
         mocked_perform_archival.assert_called_once()
