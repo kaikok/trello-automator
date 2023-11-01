@@ -321,7 +321,8 @@ class Test_first_time_load:
         mocked_retrieve_all_cards_from_trello.assert_called_once_with(
             board_lookup, "board-one")
         mocked_create_card_lookup.assert_called_once_with(cards)
-        mocked_save_card_lookup.assert_called_once_with(card_json_lookup)
+        mocked_save_card_lookup.assert_called_once_with(
+            card_json_lookup, mocked_daily_config)
 
 
 class Test_get_card_ids_from_action_list:
@@ -437,7 +438,7 @@ class Test_update_cards_and_actions:
         mocked_save_action_list.assert_called_once_with(
             action_list, mocked_daily_config)
         mocked_save_card_lookup.assert_called_once_with(
-            card_json_lookup)
+            card_json_lookup, mocked_daily_config)
 
 
 class Test_calculate_sprint_dates_for_given_date:
