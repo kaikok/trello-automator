@@ -909,7 +909,7 @@ class Test_run:
 
         mocked_create_daily_config.assert_called_once()
         mocked_load_from_local.assert_called_once_with(mocked_daily_config)
-        mocked_init_trello_conn.assert_called_once()
+        mocked_init_trello_conn.assert_called_once_with(mocked_daily_config)
         mocked_first_time_load.assert_called_once_with(
             "handle",
             mocked_daily_config)
@@ -945,7 +945,7 @@ class Test_run:
 
         mocked_create_daily_config.assert_called_once()
         mocked_load_from_local.assert_called_once_with(mocked_daily_config)
-        mocked_init_trello_conn.assert_called_once()
+        mocked_init_trello_conn.assert_called_once_with(mocked_daily_config)
         mocked_update_cards_and_actions.assert_called_once_with(
             action_list, card_json_lookup, "handle", mocked_daily_config)
         mocked_first_time_load.assert_not_called()
