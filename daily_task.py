@@ -12,19 +12,17 @@ from daily_config import Daily_config
 def run():
     config = Daily_config()
     context = {}
+    context["action_list"], context["card_json_lookup"] = \
+        load_from_local(config)
 
-    context["action_list"], context["card_json_lookup"] = load_from_local(config)
-    # context["action_list"] = action_list
-
-    handle = init_trello_conn(config)
-    context["handle"] = handle
+    context["handle"] = init_trello_conn(config)
 
     if len(context["action_list"]) == 0:
         first_time_load(context, config)
     else:
-        context["action_list"], context["card_json_lookup"] = update_cards_and_actions(
-            context, config)
-    perform_archival(handle, context["action_list"], config)
+        context["action_list"], context["card_json_lookup"] = \
+            update_cards_and_actions(context, config)
+    perform_archival(context["handle"], context["action_list"], config)
 
 
 def load_from_local(config):
