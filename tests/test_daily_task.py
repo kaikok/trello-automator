@@ -282,7 +282,7 @@ class Test_load_from_local:
         assert result[0] == action_list
         assert result[1] == card_json_lookup
         mocked_load_action_list.assert_called_once_with(mocked_daily_config)
-        mocked_load_card_lookup.assert_called_once()
+        mocked_load_card_lookup.assert_called_once_with(mocked_daily_config)
 
 
 class Test_first_time_load:
