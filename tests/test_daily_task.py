@@ -51,12 +51,12 @@ class Test_init_trello_conn:
         handle = daily_task.init_trello_conn()
         assert isinstance(handle, trello.trelloclient.TrelloClient)
 
-    def test_should_use_env_var(self, mocker):
+    def test_should_retrieve_credentials_from_config_object(self, mocker):
+        mocked_daily_config = mocker.Mock()
         mocker.patch("daily_task.TrelloClient.__init__", return_value=None)
-
-        os.environ["API_KEY"] = "ABC"
-        os.environ["TOKEN"] = "DEF"
-        handle = daily_task.init_trello_conn()
+        mocked_daily_config.api_key = "ABC"
+        mocked_daily_config.token = "DEF"
+        handle = daily_task.init_trello_conn(mocked_daily_config)
         handle.__init__.assert_called_once_with(
             api_key="ABC",
             token="DEF")
