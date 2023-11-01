@@ -404,6 +404,7 @@ class Test_update_cards_and_actions:
     def test_retrieve_new_actions_cards_append_or_update_and_save(
             self, mocker):
         mocked_daily_config = mocker.Mock()
+        mocked_daily_config.board_name = "board-one"
         handle = "handle"
         board_lookup = {"board-one": 123}
         action_list = [{"id": 123}, {"id": 456}]
