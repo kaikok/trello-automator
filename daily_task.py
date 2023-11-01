@@ -23,7 +23,7 @@ def run():
 
 def load_from_local(config):
     action_list = load_action_list(config)
-    card_json_lookup = load_card_lookup()
+    card_json_lookup = load_card_lookup(config)
     return action_list, card_json_lookup
 
 
