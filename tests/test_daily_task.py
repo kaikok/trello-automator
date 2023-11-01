@@ -290,15 +290,16 @@ class Test_first_time_load:
         mocked_daily_config = mocker.Mock()
         mocked_daily_config.board_name = "board-one"
         handle = "handle"
-        context = {
-            "handle": handle
-        }
-
         board_lookup = {"board-one": 123}
         action_list = [123, 456]
         cards = [789, 987]
         card_lookup = {"card_lookup": 123}
         card_json_lookup = {"card_json_lookup": 456}
+        context = {
+            "card_json_lookup": card_json_lookup,
+            "action_list": action_list,
+            "handle": handle
+        }
 
         mocked_setup_board_lookup = mocker.patch(
             "daily_task.setup_board_lookup",
@@ -894,11 +895,13 @@ class Test_run:
     def test_empty_action_list(self, mocker):
         mocked_daily_config = mocker.Mock()
         handle = "handle"
-        context = {
-            "handle": handle
-        }
         action_list = []
         card_json_lookup = {}
+        context = {
+            "handle": handle,
+            "card_json_lookup": card_json_lookup,
+            "action_list": action_list
+        }
 
         mocked_create_daily_config = mocker.patch(
             "daily_task.Daily_config",
