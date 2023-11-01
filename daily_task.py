@@ -100,9 +100,9 @@ def retrieve_all_actions_from_trello(board_lookup, board_name):
     return all_actions
 
 
-def save_action_list(action_list):
+def save_action_list(action_list, config):
     json.dump(action_list,
-              open(os.getenv("ACTIONS_FILE"), "w"), indent="  ")
+              open(config.actions_file, "w"), indent="  ")
 
 
 def retrieve_all_cards_from_trello(board_lookup, board_name):

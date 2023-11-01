@@ -227,7 +227,7 @@ class Test_save_action_list:
             "daily_task.json.dump", return_value=None)
         assert daily_task.save_action_list([], mocked_config) is None
         mocked_open.assert_called_once_with(
-            "actions.json", "W")
+            "actions.json", "w")
         mocked_json_dump.assert_called_once_with(
             [],
             "Mock FP",
