@@ -761,14 +761,17 @@ class Test_find_done_card_and_create_archival_jobs:
 
 class Test_perform_archival:
     def test_perform_archival(self, mocker):
+        mocked_daily_config = mocker.Mock()
+
         handle = "handle"
         action_list = []
         board_one = mocker.Mock()
         board_name = "board-one-name"
         board_lookup = {board_name: board_one}
-        os.environ["ARCHIVAL_BOARD_NAME"] = "ABC"
-        os.environ["BOARD_NAME"] = "DEF"
-        os.environ["DONE_LIST_NAME"] = "GHI"
+        
+        mocked_daily_config.archival_board_name = "ABC"
+        mocked_daily_config.board_name = "DEF"
+        mocked_daily_config.done_list_name = "GHI"
         archival_jobs = [123, 456]
 
         mocked_setup_board_lookup = mocker.patch(
@@ -781,7 +784,7 @@ class Test_perform_archival:
             "daily_task.process_archival_job",
             return_value=None)
 
-        daily_task.perform_archival(handle, action_list)
+        daily_task.perform_archival(handle, action_list, mocked_daily_config)
 
         mocked_setup_board_lookup.assert_called_once_with(handle)
         mocked_find_done_card_and_create_archival_jobs.assert_called_once_with(
