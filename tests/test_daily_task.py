@@ -220,10 +220,14 @@ class Test_save_card_lookup:
 
 class Test_save_action_list:
     def test_save_action_list(self, mocker):
-        mocker.patch("daily_task.open", return_value="Mock FP")
+        mocked_config = mocker.Mock()
+        mocked_config.actions_file = "actions.json"
+        mocked_open = mocker.patch("daily_task.open", return_value="Mock FP")
         mocked_json_dump = mocker.patch(
             "daily_task.json.dump", return_value=None)
-        daily_task.save_action_list([])
+        assert daily_task.save_action_list([], mocked_config) is None
+        mocked_open.assert_called_once_with(
+            "actions.json", "W")
         mocked_json_dump.assert_called_once_with(
             [],
             "Mock FP",
