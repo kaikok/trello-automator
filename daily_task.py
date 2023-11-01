@@ -118,9 +118,9 @@ def create_card_lookup(cards):
     return [card_lookup, card_json_lookup]
 
 
-def save_card_lookup(card_json_lookup):
+def save_card_lookup(card_json_lookup, config):
     json.dump(card_json_lookup,
-              open(os.getenv("CARDS_FILE"), "w"), indent="  ")
+              open(config.cards_file, "w"), indent="  ")
 
 
 def update_cards_and_actions(action_list, card_json_lookup, handle, config):
