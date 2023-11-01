@@ -210,10 +210,14 @@ class Test_retrieve_all_cards_from_trello:
 
 class Test_save_card_lookup:
     def test_save_card(self, mocker):
-        mocker.patch("daily_task.open", return_value="Mock FP")
+        mocked_daily_config = mocker.Mock()
+        mocked_daily_config.cards_file = "cards.json"
+        mocked_open = mocker.patch("daily_task.open", return_value="Mock FP")
         mocked_json_dump = mocker.patch(
             "daily_task.json.dump", return_value=None)
-        daily_task.save_card_lookup({})
+        daily_task.save_card_lookup({}, mocked_daily_config)
+        mocked_open.assert_called_once_with(
+            "cards.json", "w")
         mocked_json_dump.assert_called_once_with(
             {},
             "Mock FP",
