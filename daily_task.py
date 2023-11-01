@@ -12,7 +12,7 @@ from daily_config import Daily_config
 def run():
     config = Daily_config()
     action_list, card_json_lookup = load_from_local(config)
-    handle = init_trello_conn()
+    handle = init_trello_conn(config)
     if len(action_list) == 0:
         first_time_load(handle, config)
     else:
