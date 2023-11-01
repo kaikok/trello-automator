@@ -21,8 +21,8 @@ def run():
     perform_archival(handle, action_list)
 
 
-def load_from_local():
-    action_list = load_action_list()
+def load_from_local(config):
+    action_list = load_action_list(config)
     card_json_lookup = load_card_lookup()
     return action_list, card_json_lookup
 
