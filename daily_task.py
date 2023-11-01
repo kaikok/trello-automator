@@ -18,7 +18,7 @@ def run():
     else:
         action_list, card_json_lookup = update_cards_and_actions(
             action_list, card_json_lookup, handle, config)
-    perform_archival(handle, action_list)
+    perform_archival(handle, action_list, config)
 
 
 def load_from_local(config):
