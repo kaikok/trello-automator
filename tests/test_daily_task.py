@@ -415,6 +415,12 @@ class Test_update_cards_and_actions:
         card_json_lookup = {"abc": {"id": "abc"}, "def": {"id": "def"}}
         new_action_list = [789]
 
+        context = {
+            "handle": handle,
+            "card_json_lookup": card_json_lookup,
+            "action_list": action_list
+        }
+
         mocked_setup_board_lookup = mocker.patch(
             "daily_task.setup_board_lookup",
             return_value=board_lookup)
@@ -435,7 +441,7 @@ class Test_update_cards_and_actions:
             return_value=None)
 
         daily_task.update_cards_and_actions(
-            action_list, card_json_lookup, handle, mocked_daily_config)
+            context, mocked_daily_config)
 
         mocked_setup_board_lookup.assert_called_once_with(handle)
         mocked_retrieve_latest_actions_from_trello.assert_called_once_with(
@@ -927,8 +933,15 @@ class Test_run:
 
     def test_non_empty_action_list(self, mocker):
         mocked_daily_config = mocker.Mock()
+        handle = "handle"
         action_list = [123]
         card_json_lookup = {}
+
+        context = {
+            "handle": handle,
+            "action_list": action_list,
+            "card_json_lookup": card_json_lookup
+        }
 
         mocked_create_daily_config = mocker.patch(
             "daily_task.Daily_config",
@@ -955,7 +968,7 @@ class Test_run:
         mocked_load_from_local.assert_called_once_with(mocked_daily_config)
         mocked_init_trello_conn.assert_called_once_with(mocked_daily_config)
         mocked_update_cards_and_actions.assert_called_once_with(
-            action_list, card_json_lookup, "handle", mocked_daily_config)
+            context, mocked_daily_config)
         mocked_first_time_load.assert_not_called()
         mocked_perform_archival.assert_called_once_with(
-            "handle", action_list, mocked_daily_config)
+            handle, action_list, mocked_daily_config)
