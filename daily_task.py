@@ -11,10 +11,15 @@ from daily_config import Daily_config
 
 def run():
     config = Daily_config()
+    context = {}
+
     action_list, card_json_lookup = load_from_local(config)
+
     handle = init_trello_conn(config)
+    context["handle"] = handle
+
     if len(action_list) == 0:
-        first_time_load(handle, config)
+        first_time_load(context, config)
     else:
         action_list, card_json_lookup = update_cards_and_actions(
             action_list, card_json_lookup, handle, config)
@@ -50,9 +55,9 @@ def init_trello_conn(config):
     return client
 
 
-def first_time_load(handle, config):
+def first_time_load(context, config):
     print("First time setup...")
-    board_lookup = setup_board_lookup(handle)
+    board_lookup = setup_board_lookup(context["handle"])
     action_list = retrieve_all_actions_from_trello(
         board_lookup, config.board_name)
     save_action_list(action_list, config)
