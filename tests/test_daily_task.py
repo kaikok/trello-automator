@@ -19,19 +19,22 @@ class Test_load_action_list:
 
 
 class Test_load_card_lookup:
-    def test_empty_file(self):
-        os.environ["CARDS_FILE"] = \
+    def test_empty_file(self, mocker):
+        mocked_daily_config = mocker.Mock()
+        mocked_daily_config.cards_file = \
             os.getcwd() + "/tests/empty_card_lookup.json"
-        assert daily_task.load_card_lookup() == {}
+        assert daily_task.load_card_lookup(mocked_daily_config) == {}
 
-    def test_file_not_found(self):
-        os.environ["CARDS_FILE"] = \
+    def test_file_not_found(self, mocker):
+        mocked_daily_config = mocker.Mock()
+        mocked_daily_config.cards_file = \
             os.getcwd() + "/tests/not_found_card_lookup.json"
-        assert daily_task.load_card_lookup() == {}
+        assert daily_task.load_card_lookup(mocked_daily_config) == {}
 
-    def test_valid_file(self):
-        os.environ["CARDS_FILE"] = os.getcwd() + "/tests/card_lookup.json"
-        assert daily_task.load_card_lookup() == {
+    def test_valid_file(self, mocker):
+        mocked_daily_config = mocker.Mock()
+        mocked_daily_config.cards_file = os.getcwd() + "/tests/card_lookup.json"
+        assert daily_task.load_card_lookup(mocked_daily_config) == {
             "64e7072e2edd663977c39c6a": {
                 "id": "64e7072e2edd663977c39c6a"
             },
