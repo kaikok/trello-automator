@@ -3,5 +3,6 @@ pytest
 pytest-mock
 pytest-cov
 python-dotenv
+pyfakefs
 autopep8
 tqdm
