@@ -1,4 +1,5 @@
 import os
+import json
 from dotenv import load_dotenv
 
 
@@ -13,6 +14,6 @@ class Daily_config:
         self.done_list_name = os.environ["DONE_LIST_NAME"]
         self.archival_board_name = os.environ["ARCHIVAL_BOARD_NAME"]
         if (os.environ["CONFIG_FILE"] and os.environ["CONFIG_FILE"] != ""):
-            pass
+            self.root = json.load(open(os.environ["CONFIG_FILE"]))
         else:
             self.root = None
