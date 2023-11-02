@@ -16,6 +16,7 @@ def run():
         load_from_local(config)
 
     context["handle"] = init_trello_conn(config)
+    context["board_lookup"] = setup_board_lookup(context["handle"])
 
     if len(context["action_list"]) == 0:
         first_time_load(context, config)
