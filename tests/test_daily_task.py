@@ -298,12 +298,10 @@ class Test_first_time_load:
         context = {
             "card_json_lookup": card_json_lookup,
             "action_list": action_list,
-            "handle": handle
+            "handle": handle,
+            "board_lookup": board_lookup
         }
 
-        mocked_setup_board_lookup = mocker.patch(
-            "daily_task.setup_board_lookup",
-            return_value=board_lookup)
         mocked_retrieve_all_actions_from_trello = mocker.patch(
             "daily_task.retrieve_all_actions_from_trello",
             return_value=action_list)
@@ -322,7 +320,6 @@ class Test_first_time_load:
 
         daily_task.first_time_load(context, mocked_daily_config)
 
-        mocked_setup_board_lookup.assert_called_once_with(handle)
         mocked_retrieve_all_actions_from_trello.assert_called_once_with(
             board_lookup, "board-one")
         mocked_save_action_list.assert_called_once_with(
@@ -419,12 +416,10 @@ class Test_update_cards_and_actions:
         context = {
             "handle": handle,
             "card_json_lookup": card_json_lookup,
-            "action_list": action_list
+            "action_list": action_list,
+            "board_lookup": board_lookup
         }
 
-        mocked_setup_board_lookup = mocker.patch(
-            "daily_task.setup_board_lookup",
-            return_value=board_lookup)
         mocked_retrieve_latest_actions_from_trello = mocker.patch(
             "daily_task.retrieve_latest_actions_from_trello",
             return_value=new_action_list)
@@ -444,7 +439,6 @@ class Test_update_cards_and_actions:
         daily_task.update_cards_and_actions(
             context, mocked_daily_config)
 
-        mocked_setup_board_lookup.assert_called_once_with(handle)
         mocked_retrieve_latest_actions_from_trello.assert_called_once_with(
             board_lookup, "board-one", action_list[0]["id"])
         mocked_update_card_json_lookup.assert_called_once_with(
@@ -782,7 +776,8 @@ class Test_perform_archival:
 
         context = {
             "handle": handle,
-            "action_list": action_list
+            "action_list": action_list,
+            "board_lookup": board_lookup
         }
         
         mocked_daily_config.archival_board_name = "ABC"
@@ -790,9 +785,6 @@ class Test_perform_archival:
         mocked_daily_config.done_list_name = "GHI"
         archival_jobs = [123, 456]
 
-        mocked_setup_board_lookup = mocker.patch(
-            "daily_task.setup_board_lookup",
-            return_value=board_lookup)
         mocked_find_done_card_and_create_archival_jobs = mocker.patch(
             "daily_task.find_done_card_and_create_archival_jobs",
             return_value=archival_jobs)
@@ -802,7 +794,6 @@ class Test_perform_archival:
 
         daily_task.perform_archival(context, mocked_daily_config)
 
-        mocked_setup_board_lookup.assert_called_once_with(handle)
         mocked_find_done_card_and_create_archival_jobs.assert_called_once_with(
             board_lookup, "DEF", action_list, "GHI")
         mocked_process_archival_job.assert_called_once_with(
