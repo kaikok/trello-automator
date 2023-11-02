@@ -779,6 +779,11 @@ class Test_perform_archival:
         board_one = mocker.Mock()
         board_name = "board-one-name"
         board_lookup = {board_name: board_one}
+
+        context = {
+            "handle": handle,
+            "action_list": action_list
+        }
         
         mocked_daily_config.archival_board_name = "ABC"
         mocked_daily_config.board_name = "DEF"
@@ -795,7 +800,7 @@ class Test_perform_archival:
             "daily_task.process_archival_job",
             return_value=None)
 
-        daily_task.perform_archival(handle, action_list, mocked_daily_config)
+        daily_task.perform_archival(context, mocked_daily_config)
 
         mocked_setup_board_lookup.assert_called_once_with(handle)
         mocked_find_done_card_and_create_archival_jobs.assert_called_once_with(
@@ -932,7 +937,7 @@ class Test_run:
             mocked_daily_config)
         mocked_update_cards_and_actions.assert_not_called()
         mocked_perform_archival.assert_called_once_with(
-            "handle", action_list, mocked_daily_config)
+            context, mocked_daily_config)
 
     def test_non_empty_action_list(self, mocker):
         mocked_daily_config = mocker.Mock()
@@ -974,4 +979,4 @@ class Test_run:
             context, mocked_daily_config)
         mocked_first_time_load.assert_not_called()
         mocked_perform_archival.assert_called_once_with(
-            handle, action_list, mocked_daily_config)
+            context, mocked_daily_config)

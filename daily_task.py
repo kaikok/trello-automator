@@ -22,7 +22,7 @@ def run():
     else:
         context["action_list"], context["card_json_lookup"] = \
             update_cards_and_actions(context, config)
-    perform_archival(context["handle"], context["action_list"], config)
+    perform_archival(context, config)
 
 
 def load_from_local(config):
@@ -201,12 +201,12 @@ def update_action_list(action_list, new_action_list):
     return new_action_list + action_list
 
 
-def perform_archival(handle, action_list, config):
-    board_lookup = setup_board_lookup(handle)
+def perform_archival(context, config):
+    board_lookup = setup_board_lookup(context["handle"])
     archival_jobs = find_done_card_and_create_archival_jobs(
         board_lookup,
         config.board_name,
-        action_list,
+        context["action_list"],
         config.done_list_name)
     process_archival_job(
         board_lookup, config.archival_board_name, archival_jobs)
