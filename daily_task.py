@@ -57,12 +57,11 @@ def init_trello_conn(config):
 
 def first_time_load(context, config):
     print("First time setup...")
-    board_lookup = setup_board_lookup(context["handle"])
     action_list = retrieve_all_actions_from_trello(
-        board_lookup, config.board_name)
+        context["board_lookup"], config.board_name)
     save_action_list(action_list, config)
     cards = retrieve_all_cards_from_trello(
-        board_lookup, config.board_name)
+        context["board_lookup"], config.board_name)
     card_lookup, card_json_lookup = create_card_lookup(cards)
     save_card_lookup(card_json_lookup, config)
     return action_list, card_lookup, card_json_lookup
@@ -130,9 +129,8 @@ def save_card_lookup(card_json_lookup, config):
 
 def update_cards_and_actions(context, config):
     print("Looking for updates...")
-    board_lookup = setup_board_lookup(context["handle"])
     new_action_list = retrieve_latest_actions_from_trello(
-        board_lookup, config.board_name, context["action_list"][0]['id'])
+        context["board_lookup"], config.board_name, context["action_list"][0]['id'])
     print(f'{len(new_action_list)} new Actions found.')
     card_json_lookup = update_card_json_lookup(
         context["handle"],
@@ -203,14 +201,13 @@ def update_action_list(action_list, new_action_list):
 
 
 def perform_archival(context, config):
-    board_lookup = setup_board_lookup(context["handle"])
     archival_jobs = find_done_card_and_create_archival_jobs(
-        board_lookup,
+        context["board_lookup"],
         config.board_name,
         context["action_list"],
         config.done_list_name)
     process_archival_job(
-        board_lookup, config.archival_board_name, archival_jobs)
+        context["board_lookup"], config.archival_board_name, archival_jobs)
 
 
 def find_done_card_and_create_archival_jobs(
