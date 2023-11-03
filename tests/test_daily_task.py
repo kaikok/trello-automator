@@ -33,7 +33,8 @@ class Test_load_card_lookup:
 
     def test_valid_file(self, mocker):
         mocked_daily_config = mocker.Mock()
-        mocked_daily_config.cards_file = os.getcwd() + "/tests/card_lookup.json"
+        mocked_daily_config.cards_file = \
+            os.getcwd() + "/tests/card_lookup.json"
         assert daily_run.load_card_lookup(mocked_daily_config) == {
             "64e7072e2edd663977c39c6a": {
                 "id": "64e7072e2edd663977c39c6a"
