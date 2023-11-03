@@ -14,7 +14,6 @@ class Test_config_class:
             os.environ["BOARD_NAME"] = "5"
             os.environ["DONE_LIST_NAME"] = "6"
             os.environ["ARCHIVAL_BOARD_NAME"] = "7"
-            os.environ["CONFIG_FILE"] = ""
             config = Daily_config()
             mocked_load_dotenv.assert_called_once()
             assert config.actions_file == "1"
