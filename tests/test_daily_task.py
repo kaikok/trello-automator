@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
 import trello
-import daily_task
+import daily_run
 
 
 class Test_load_action_list:
@@ -9,13 +9,13 @@ class Test_load_action_list:
         mocked_daily_config = mocker.Mock()
         mocked_daily_config.actions_file = \
             os.getcwd() + "/tests/empty_action_list.json"
-        assert daily_task.load_action_list(mocked_daily_config) == []
+        assert daily_run.load_action_list(mocked_daily_config) == []
 
     def test_file_not_found(self, mocker):
         mocked_daily_config = mocker.Mock()
         mocked_daily_config.actions_file = \
             os.getcwd() + "/tests/not_found_action_list.json"
-        assert daily_task.load_action_list(mocked_daily_config) == []
+        assert daily_run.load_action_list(mocked_daily_config) == []
 
 
 class Test_load_card_lookup:
@@ -23,18 +23,18 @@ class Test_load_card_lookup:
         mocked_daily_config = mocker.Mock()
         mocked_daily_config.cards_file = \
             os.getcwd() + "/tests/empty_card_lookup.json"
-        assert daily_task.load_card_lookup(mocked_daily_config) == {}
+        assert daily_run.load_card_lookup(mocked_daily_config) == {}
 
     def test_file_not_found(self, mocker):
         mocked_daily_config = mocker.Mock()
         mocked_daily_config.cards_file = \
             os.getcwd() + "/tests/not_found_card_lookup.json"
-        assert daily_task.load_card_lookup(mocked_daily_config) == {}
+        assert daily_run.load_card_lookup(mocked_daily_config) == {}
 
     def test_valid_file(self, mocker):
         mocked_daily_config = mocker.Mock()
         mocked_daily_config.cards_file = os.getcwd() + "/tests/card_lookup.json"
-        assert daily_task.load_card_lookup(mocked_daily_config) == {
+        assert daily_run.load_card_lookup(mocked_daily_config) == {
             "64e7072e2edd663977c39c6a": {
                 "id": "64e7072e2edd663977c39c6a"
             },
@@ -49,15 +49,15 @@ class Test_load_card_lookup:
 class Test_init_trello_conn:
     def test_should_return_a_trello_client(self, mocker):
         mocked_daily_config = mocker.Mock()
-        handle = daily_task.init_trello_conn(mocked_daily_config)
+        handle = daily_run.init_trello_conn(mocked_daily_config)
         assert isinstance(handle, trello.trelloclient.TrelloClient)
 
     def test_should_retrieve_credentials_from_config_object(self, mocker):
         mocked_daily_config = mocker.Mock()
-        mocker.patch("daily_task.TrelloClient.__init__", return_value=None)
+        mocker.patch("daily_run.TrelloClient.__init__", return_value=None)
         mocked_daily_config.api_key = "ABC"
         mocked_daily_config.token = "DEF"
-        handle = daily_task.init_trello_conn(mocked_daily_config)
+        handle = daily_run.init_trello_conn(mocked_daily_config)
         handle.__init__.assert_called_once_with(
             api_key="ABC",
             token="DEF")
@@ -72,7 +72,7 @@ class Test_setup_board_lookup:
         board_two.name = "board-two-name"
 
         handle.list_boards.return_value = [board_one, board_two]
-        assert daily_task.setup_board_lookup(handle) == {
+        assert daily_run.setup_board_lookup(handle) == {
             "board-one-name": board_one,
             "board-two-name": board_two}
 
@@ -106,7 +106,7 @@ class Test_retrieve_all_actions_from_trello:
         board_name = "board-one-name"
         board_lookup = {"board-one-name": board_one}
 
-        actions = daily_task.retrieve_all_actions_from_trello(
+        actions = daily_run.retrieve_all_actions_from_trello(
             board_lookup, board_name)
 
         board_one.fetch_actions.assert_called_once_with(
@@ -145,7 +145,7 @@ class Test_retrieve_all_actions_from_trello:
         board_name = "board-one-name"
         board_lookup = {"board-one-name": board_one}
 
-        actions = daily_task.retrieve_all_actions_from_trello(
+        actions = daily_run.retrieve_all_actions_from_trello(
             board_lookup, board_name)
 
         board_one.fetch_actions.assert_has_calls([
@@ -183,7 +183,7 @@ class Test_retrieve_all_actions_from_trello:
         board_name = "board-one-name"
         board_lookup = {"board-one-name": board_one}
 
-        actions = daily_task.retrieve_latest_actions_from_trello(
+        actions = daily_run.retrieve_latest_actions_from_trello(
             board_lookup, board_name, "last_action_id")
 
         board_one.fetch_actions.assert_called_once_with(
@@ -206,7 +206,7 @@ class Test_retrieve_all_cards_from_trello:
 
         board_name = "board-one-name"
         board_lookup = {"board-one-name": board_one}
-        results = daily_task.retrieve_all_cards_from_trello(
+        results = daily_run.retrieve_all_cards_from_trello(
             board_lookup, board_name)
 
         assert results == expected_result
@@ -216,10 +216,10 @@ class Test_save_card_lookup:
     def test_save_card(self, mocker):
         mocked_daily_config = mocker.Mock()
         mocked_daily_config.cards_file = "cards.json"
-        mocked_open = mocker.patch("daily_task.open", return_value="Mock FP")
+        mocked_open = mocker.patch("daily_run.open", return_value="Mock FP")
         mocked_json_dump = mocker.patch(
-            "daily_task.json.dump", return_value=None)
-        daily_task.save_card_lookup({}, mocked_daily_config)
+            "daily_run.json.dump", return_value=None)
+        daily_run.save_card_lookup({}, mocked_daily_config)
         mocked_open.assert_called_once_with(
             "cards.json", "w")
         mocked_json_dump.assert_called_once_with(
@@ -232,10 +232,10 @@ class Test_save_action_list:
     def test_save_action_list(self, mocker):
         mocked_daily_config = mocker.Mock()
         mocked_daily_config.actions_file = "actions.json"
-        mocked_open = mocker.patch("daily_task.open", return_value="Mock FP")
+        mocked_open = mocker.patch("daily_run.open", return_value="Mock FP")
         mocked_json_dump = mocker.patch(
-            "daily_task.json.dump", return_value=None)
-        assert daily_task.save_action_list([], mocked_daily_config) is None
+            "daily_run.json.dump", return_value=None)
+        assert daily_run.save_action_list([], mocked_daily_config) is None
         mocked_open.assert_called_once_with(
             "actions.json", "w")
         mocked_json_dump.assert_called_once_with(
@@ -261,7 +261,7 @@ class Test_create_card_lookup:
 
         list_of_cards = [card_one, card_two]
 
-        assert daily_task.create_card_lookup(list_of_cards) == [
+        assert daily_run.create_card_lookup(list_of_cards) == [
             card_lookup, card_json_lookup]
 
 
@@ -271,13 +271,13 @@ class Test_load_from_local:
         action_list = [123, 456]
         card_json_lookup = {"abc": 123, "def": 456}
         mocked_load_action_list = mocker.patch(
-            "daily_task.load_action_list",
+            "daily_run.load_action_list",
             return_value=action_list)
         mocked_load_card_lookup = mocker.patch(
-            "daily_task.load_card_lookup",
+            "daily_run.load_card_lookup",
             return_value=card_json_lookup)
 
-        result = daily_task.load_from_local(mocked_daily_config)
+        result = daily_run.load_from_local(mocked_daily_config)
 
         assert result[0] == action_list
         assert result[1] == card_json_lookup
@@ -303,22 +303,22 @@ class Test_first_time_load:
         }
 
         mocked_retrieve_all_actions_from_trello = mocker.patch(
-            "daily_task.retrieve_all_actions_from_trello",
+            "daily_run.retrieve_all_actions_from_trello",
             return_value=action_list)
         mocked_save_action_list = mocker.patch(
-            "daily_task.save_action_list",
+            "daily_run.save_action_list",
             return_value=None)
         mocked_retrieve_all_cards_from_trello = mocker.patch(
-            "daily_task.retrieve_all_cards_from_trello",
+            "daily_run.retrieve_all_cards_from_trello",
             return_value=cards)
         mocked_create_card_lookup = mocker.patch(
-            "daily_task.create_card_lookup",
+            "daily_run.create_card_lookup",
             return_value=[card_lookup, card_json_lookup])
         mocked_save_card_lookup = mocker.patch(
-            "daily_task.save_card_lookup",
+            "daily_run.save_card_lookup",
             return_value=None)
 
-        daily_task.first_time_load(context, mocked_daily_config)
+        daily_run.first_time_load(context, mocked_daily_config)
 
         mocked_retrieve_all_actions_from_trello.assert_called_once_with(
             board_lookup, "board-one")
@@ -349,7 +349,7 @@ class Test_get_card_ids_from_action_list:
                         "id": "def"}}}]
         expected_card_list = ["abc", "def"]
 
-        assert daily_task.get_card_ids_from_action_list(
+        assert daily_run.get_card_ids_from_action_list(
             action_list) == expected_card_list
 
 
@@ -366,7 +366,7 @@ class Test_update_card_json_lookup:
             "xyz": {"id": "xyz"},
             "opq": {"id": "opq"}}
         mocked_get_card_ids_from_action_list = mocker.patch(
-            "daily_task.get_card_ids_from_action_list",
+            "daily_run.get_card_ids_from_action_list",
             return_value=updated_card_ids)
 
         card_one = mocker.Mock()
@@ -378,12 +378,12 @@ class Test_update_card_json_lookup:
 
         progress_bar = mocker.Mock()
         mocked_tqdm = mocker.patch(
-            "daily_task.tqdm",
+            "daily_run.tqdm",
             return_value=progress_bar)
 
         handle.get_card.side_effect = [card_one, card_two, card_three]
 
-        results = daily_task.update_card_json_lookup(
+        results = daily_run.update_card_json_lookup(
             handle, card_json_lookup, new_action_list)
 
         mocked_get_card_ids_from_action_list.assert_called_once_with(
@@ -398,7 +398,7 @@ class Test_update_action_list:
     def test_update_action_list(self, mocker):
         action_list = [{"id": 123}, {"id": 456}]
         new_action_list = [{"id": 789}]
-        results = daily_task.update_action_list(action_list, new_action_list)
+        results = daily_run.update_action_list(action_list, new_action_list)
         assert results == [{"id": 789}, {"id": 123}, {"id": 456}]
 
 
@@ -421,22 +421,22 @@ class Test_update_cards_and_actions:
         }
 
         mocked_retrieve_latest_actions_from_trello = mocker.patch(
-            "daily_task.retrieve_latest_actions_from_trello",
+            "daily_run.retrieve_latest_actions_from_trello",
             return_value=new_action_list)
         mocked_update_card_json_lookup = mocker.patch(
-            "daily_task.update_card_json_lookup",
+            "daily_run.update_card_json_lookup",
             return_value=card_json_lookup)
         mocked_update_action_list = mocker.patch(
-            "daily_task.update_action_list",
+            "daily_run.update_action_list",
             return_value=action_list)
         mocked_save_action_list = mocker.patch(
-            "daily_task.save_action_list",
+            "daily_run.save_action_list",
             return_value=None)
         mocked_save_card_lookup = mocker.patch(
-            "daily_task.save_card_lookup",
+            "daily_run.save_card_lookup",
             return_value=None)
 
-        daily_task.update_cards_and_actions(
+        daily_run.update_cards_and_actions(
             context, mocked_daily_config)
 
         mocked_retrieve_latest_actions_from_trello.assert_called_once_with(
@@ -459,7 +459,7 @@ class Test_calculate_sprint_dates_for_given_date:
 
         expected_sprint_dates = (reference_start_date, reference_end_date)
 
-        assert daily_task.calculate_sprint_dates_for_given_date(
+        assert daily_run.calculate_sprint_dates_for_given_date(
             reference_start_date, given_date) == expected_sprint_dates
 
     def test_given_date_at_next_sprint_start_date(self, mocker):
@@ -470,7 +470,7 @@ class Test_calculate_sprint_dates_for_given_date:
 
         expected_sprint_dates = (next_start_date, next_end_date)
 
-        assert daily_task.calculate_sprint_dates_for_given_date(
+        assert daily_run.calculate_sprint_dates_for_given_date(
             reference_start_date, given_date) == expected_sprint_dates
 
     def test_given_date_at_next_sprint_end_date(self, mocker):
@@ -481,7 +481,7 @@ class Test_calculate_sprint_dates_for_given_date:
 
         expected_sprint_dates = (next_start_date, next_end_date)
 
-        assert daily_task.calculate_sprint_dates_for_given_date(
+        assert daily_run.calculate_sprint_dates_for_given_date(
             reference_start_date, given_date) == expected_sprint_dates
 
     def test_given_date_at_next_next_sprint_start_date(self, mocker):
@@ -492,7 +492,7 @@ class Test_calculate_sprint_dates_for_given_date:
 
         expected_sprint_dates = (next_next_start_date, next_next_end_date)
 
-        assert daily_task.calculate_sprint_dates_for_given_date(
+        assert daily_run.calculate_sprint_dates_for_given_date(
             reference_start_date, given_date) == expected_sprint_dates
 
     def test_given_date_at_the_middle_of_next_next_sprint(self, mocker):
@@ -503,7 +503,7 @@ class Test_calculate_sprint_dates_for_given_date:
 
         expected_sprint_dates = (next_next_start_date, next_next_end_date)
 
-        assert daily_task.calculate_sprint_dates_for_given_date(
+        assert daily_run.calculate_sprint_dates_for_given_date(
             reference_start_date, given_date) == expected_sprint_dates
 
     def test_given_date_at_previous_sprint_end_date(self, mocker):
@@ -514,7 +514,7 @@ class Test_calculate_sprint_dates_for_given_date:
 
         expected_sprint_dates = (previous_start_date, previous_end_date)
 
-        assert daily_task.calculate_sprint_dates_for_given_date(
+        assert daily_run.calculate_sprint_dates_for_given_date(
             reference_start_date, given_date) == expected_sprint_dates
 
     def test_given_date_at_previous_sprint_start_date(self, mocker):
@@ -525,7 +525,7 @@ class Test_calculate_sprint_dates_for_given_date:
 
         expected_sprint_dates = (previous_start_date, previous_end_date)
 
-        assert daily_task.calculate_sprint_dates_for_given_date(
+        assert daily_run.calculate_sprint_dates_for_given_date(
             reference_start_date, given_date) == expected_sprint_dates
 
     def test_given_date_at_previous_previous_sprint_start_date(self, mocker):
@@ -537,7 +537,7 @@ class Test_calculate_sprint_dates_for_given_date:
         expected_sprint_dates = (
             previous_previous_start_date, previous_previous_end_date)
 
-        assert daily_task.calculate_sprint_dates_for_given_date(
+        assert daily_run.calculate_sprint_dates_for_given_date(
             reference_start_date, given_date) == expected_sprint_dates
 
     def test_given_date_at_previous_previous_sprint_end_date(self, mocker):
@@ -549,7 +549,7 @@ class Test_calculate_sprint_dates_for_given_date:
         expected_sprint_dates = (
             previous_previous_start_date, previous_previous_end_date)
 
-        assert daily_task.calculate_sprint_dates_for_given_date(
+        assert daily_run.calculate_sprint_dates_for_given_date(
             reference_start_date, given_date) == expected_sprint_dates
 
     def test_given_date_at_the_middle_of_previous_previous_sprint_end_date(
@@ -559,7 +559,7 @@ class Test_calculate_sprint_dates_for_given_date:
         previous_previous_end_date = "2023-07-18T00:00:00"
         given_date = "2023-07-12T00:00:00"
 
-        assert daily_task.calculate_sprint_dates_for_given_date(
+        assert daily_run.calculate_sprint_dates_for_given_date(
             reference_start_date, given_date) == (
             previous_previous_start_date, previous_previous_end_date)
 
@@ -582,7 +582,7 @@ class Test_retrieve_done_list_from_trello:
         results = [list_one, list_two]
         board_one.get_lists.return_value = results
 
-        assert daily_task.retrieve_done_list_from_trello(
+        assert daily_run.retrieve_done_list_from_trello(
             board_lookup, board_name, done_list_name) == list_two
 
         board_one.get_lists.assert_called_once_with("all")
@@ -603,7 +603,7 @@ class Test_find_archival_list:
         board_lookup = {"board-one-name": board_one}
         board_one.get_lists.return_value = lists
 
-        assert daily_task.find_archival_list(
+        assert daily_run.find_archival_list(
             board_lookup, archival_board_name, archival_list_name) == list_two
 
 
@@ -615,7 +615,7 @@ class Test_create_archival_list:
         archival_list_name = "new-archival-list-name"
         board_lookup = {"board-one-name": board_one}
         board_one.add_list.return_value = new_list
-        assert daily_task.create_archival_list(
+        assert daily_run.create_archival_list(
             board_lookup, archival_board_name, archival_list_name) == new_list
 
 
@@ -627,10 +627,10 @@ class Test_create_archival_list_if_not_found:
         list = "list"
 
         mocked_find_archival_list = mocker.patch(
-            "daily_task.find_archival_list",
+            "daily_run.find_archival_list",
             return_value=list)
 
-        assert daily_task.create_archival_list_if_not_found(
+        assert daily_run.create_archival_list_if_not_found(
             board_lookup, archival_board_name, archival_list_name) == list
 
         mocked_find_archival_list.assert_called_once_with(
@@ -643,13 +643,13 @@ class Test_create_archival_list_if_not_found:
         list = "list"
 
         mocked_find_archival_list = mocker.patch(
-            "daily_task.find_archival_list",
+            "daily_run.find_archival_list",
             return_value=None)
         mocked_create_archival_list = mocker.patch(
-            "daily_task.create_archival_list",
+            "daily_run.create_archival_list",
             return_value=list)
 
-        assert daily_task.create_archival_list_if_not_found(
+        assert daily_run.create_archival_list_if_not_found(
             board_lookup, archival_board_name, archival_list_name) == list
 
         mocked_find_archival_list.assert_called_once_with(
@@ -677,12 +677,12 @@ class Test_create_card_action_list_lookup:
             card_one["id"]: [action_one, action_two]
         }
 
-        assert daily_task.create_card_action_list_lookup(
+        assert daily_run.create_card_action_list_lookup(
             action_list) == expected_card_action_list_lookup
 
     def test_empty_action_list(self, mocker):
         action_list = []
-        assert daily_task.create_card_action_list_lookup(
+        assert daily_run.create_card_action_list_lookup(
             action_list) == {}
 
 
@@ -705,7 +705,7 @@ class Test_get_move_to_done_list_date:
                     "listAfter": {
                         "id": done_list_id}},
                       "date": move_date}]}
-        assert daily_task.get_move_to_done_list_date(
+        assert daily_run.get_move_to_done_list_date(
             card_action_list_lookup, card_id, done_list_id) == move_date
 
     def test_date_not_found(self, mocker):
@@ -719,7 +719,7 @@ class Test_get_move_to_done_list_date:
                     "listAfter": {
                         "id": "not-this-list"}},
                       "date": other_date}]}
-        assert daily_task.get_move_to_done_list_date(
+        assert daily_run.get_move_to_done_list_date(
             card_action_list_lookup, card_id, done_list_id) is None
 
 
@@ -742,16 +742,16 @@ class Test_find_done_card_and_create_archival_jobs:
         done_list.id = "list-id-456"
 
         mocked_create_card_action_list_lookup = mocker.patch(
-            "daily_task.create_card_action_list_lookup",
+            "daily_run.create_card_action_list_lookup",
             return_value=card_action_list_lookup)
         mocked_retrieve_done_list_from_trello = mocker.patch(
-            "daily_task.retrieve_done_list_from_trello",
+            "daily_run.retrieve_done_list_from_trello",
             return_value=done_list)
         mocked_get_move_to_done_list_date = mocker.patch(
-            "daily_task.get_move_to_done_list_date",
+            "daily_run.get_move_to_done_list_date",
             return_value="done_date")
 
-        archival_jobs = daily_task.find_done_card_and_create_archival_jobs(
+        archival_jobs = daily_run.find_done_card_and_create_archival_jobs(
             board_lookup, board_name, action_list, done_list_name)
 
         mocked_create_card_action_list_lookup.assert_called_once_with(
@@ -786,13 +786,13 @@ class Test_perform_archival:
         archival_jobs = [123, 456]
 
         mocked_find_done_card_and_create_archival_jobs = mocker.patch(
-            "daily_task.find_done_card_and_create_archival_jobs",
+            "daily_run.find_done_card_and_create_archival_jobs",
             return_value=archival_jobs)
         mocked_process_archival_job = mocker.patch(
-            "daily_task.process_archival_job",
+            "daily_run.process_archival_job",
             return_value=None)
 
-        daily_task.perform_archival(context, mocked_daily_config)
+        daily_run.perform_archival(context, mocked_daily_config)
 
         mocked_find_done_card_and_create_archival_jobs.assert_called_once_with(
             board_lookup, "DEF", action_list, "GHI")
@@ -820,17 +820,17 @@ class Test_process_archival_job:
             "2023-09-19T11:07:49.365")
         mocked_datetime = mocker.Mock()
         mocked_datetime.now.return_value = faked_datetime_for_today
-        mocker.patch("daily_task.datetime", mocked_datetime)
+        mocker.patch("daily_run.datetime", mocked_datetime)
 
         mocked_calculate_sprint_dates_for_given_date = mocker.patch(
-            "daily_task.calculate_sprint_dates_for_given_date",
+            "daily_run.calculate_sprint_dates_for_given_date",
             side_effect=[("2023-09-13T00:00:00", "2023-09-26T00:00:00"),
                          ("2023-08-02T00:00:00", "2023-08-15T00:00:00")])
         mocked_create_archival_list_if_not_found = mocker.patch(
-            "daily_task.create_archival_list_if_not_found",
+            "daily_run.create_archival_list_if_not_found",
             return_value=list)
 
-        daily_task.process_archival_job(
+        daily_run.process_archival_job(
             board_lookup, archival_board_name, archival_jobs)
 
         mocked_calculate_sprint_dates_for_given_date.assert_has_calls([
@@ -864,17 +864,17 @@ class Test_process_archival_job:
             "2023-09-19T11:07:49.365")
         mocked_datetime = mocker.Mock()
         mocked_datetime.now.return_value = faked_datetime_for_today
-        mocker.patch("daily_task.datetime", mocked_datetime)
+        mocker.patch("daily_run.datetime", mocked_datetime)
 
         mocked_calculate_sprint_dates_for_given_date = mocker.patch(
-            "daily_task.calculate_sprint_dates_for_given_date",
+            "daily_run.calculate_sprint_dates_for_given_date",
             side_effect=[("2023-09-13T00:00:00", "2023-09-26T00:00:00"),
                          ("2023-09-13T00:00:00", "2023-09-26T00:00:00")])
         mocked_create_archival_list_if_not_found = mocker.patch(
-            "daily_task.create_archival_list_if_not_found",
+            "daily_run.create_archival_list_if_not_found",
             return_value=list)
 
-        daily_task.process_archival_job(
+        daily_run.process_archival_job(
             board_lookup, archival_board_name, archival_jobs)
 
         mocked_datetime.now.assert_called_once()
@@ -906,28 +906,28 @@ class Test_run:
         }
 
         mocked_create_daily_config = mocker.patch(
-            "daily_task.Daily_config",
+            "daily_run.Daily_config",
             return_value=mocked_daily_config)
         mocked_load_from_local = mocker.patch(
-            "daily_task.load_from_local",
+            "daily_run.load_from_local",
             return_value=[action_list, card_json_lookup])
         mocked_init_trello_conn = mocker.patch(
-            "daily_task.init_trello_conn",
+            "daily_run.init_trello_conn",
             return_value="handle")
         mocked_setup_board_lookup = mocker.patch(
-            "daily_task.setup_board_lookup",
+            "daily_run.setup_board_lookup",
             return_value=board_lookup)
         mocked_first_time_load = mocker.patch(
-            "daily_task.first_time_load",
+            "daily_run.first_time_load",
             return_value=None)
         mocked_update_cards_and_actions = mocker.patch(
-            "daily_task.update_cards_and_actions",
+            "daily_run.update_cards_and_actions",
             return_value=None)
         mocked_perform_archival = mocker.patch(
-            "daily_task.perform_archival",
+            "daily_run.perform_archival",
             return_value=None)
 
-        daily_task.run()
+        daily_run.run()
 
         mocked_create_daily_config.assert_called_once()
         mocked_load_from_local.assert_called_once_with(mocked_daily_config)
@@ -958,28 +958,28 @@ class Test_run:
         }
 
         mocked_create_daily_config = mocker.patch(
-            "daily_task.Daily_config",
+            "daily_run.Daily_config",
             return_value=mocked_daily_config)
         mocked_load_from_local = mocker.patch(
-            "daily_task.load_from_local",
+            "daily_run.load_from_local",
             return_value=[action_list, card_json_lookup])
         mocked_init_trello_conn = mocker.patch(
-            "daily_task.init_trello_conn",
+            "daily_run.init_trello_conn",
             return_value="handle")
         mocked_setup_board_lookup = mocker.patch(
-            "daily_task.setup_board_lookup",
+            "daily_run.setup_board_lookup",
             return_value=board_lookup)
         mocked_first_time_load = mocker.patch(
-            "daily_task.first_time_load",
+            "daily_run.first_time_load",
             return_value=None)
         mocked_update_cards_and_actions = mocker.patch(
-            "daily_task.update_cards_and_actions",
+            "daily_run.update_cards_and_actions",
             return_value=[action_list, card_json_lookup])
         mocked_perform_archival = mocker.patch(
-            "daily_task.perform_archival",
+            "daily_run.perform_archival",
             return_value=None)
 
-        daily_task.run()
+        daily_run.run()
 
         mocked_create_daily_config.assert_called_once()
         mocked_load_from_local.assert_called_once_with(mocked_daily_config)

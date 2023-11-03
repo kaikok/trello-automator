@@ -49,5 +49,5 @@ pytest --cov-report html --cov=.
 ## How to run script
 
 ```
-python3 daily_task.py
+python3 daily_run.py
 ```
