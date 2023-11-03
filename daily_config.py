@@ -13,7 +13,7 @@ class Daily_config:
         self.board_name = os.environ["BOARD_NAME"]
         self.done_list_name = os.environ["DONE_LIST_NAME"]
         self.archival_board_name = os.environ["ARCHIVAL_BOARD_NAME"]
-        if (os.environ["CONFIG_FILE"] and os.environ["CONFIG_FILE"] != ""):
+        if (os.environ.get("CONFIG_FILE") and os.environ["CONFIG_FILE"] != ""):
             self.root = json.load(open(os.environ["CONFIG_FILE"]))
         else:
             self.root = None
