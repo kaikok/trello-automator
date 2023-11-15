@@ -1,4 +1,4 @@
-from sync_cards import perform_sync_cards
+from sync_cards import perform_sync_cards, load_card_sync_lookup
 
 
 class Test_perform_sync_cards:
@@ -8,7 +8,9 @@ class Test_perform_sync_cards:
         perform_sync_cards(context, mocked_daily_config)
 
 class Test_load_card_sync_lookup:
-    pass
+    def test_method_exist(self, mocker):
+        mocked_daily_config = mocker.Mock()
+        load_card_sync_lookup(mocked_daily_config)
 
 class Test_find_sync_new_cards:
     pass
