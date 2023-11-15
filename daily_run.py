@@ -316,7 +316,7 @@ def find_archival_list(board_lookup, archival_board_name, archival_list_name):
 def create_archival_list(
         board_lookup, archival_board_name, archival_list_name):
     new_list = board_lookup[archival_board_name].add_list(
-        archival_list_name, "bottom")
+        archival_list_name, "top")
     return new_list
 
 

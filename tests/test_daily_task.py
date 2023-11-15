@@ -618,6 +618,7 @@ class Test_create_archival_list:
         board_one.add_list.return_value = new_list
         assert daily_run.create_archival_list(
             board_lookup, archival_board_name, archival_list_name) == new_list
+        board_one.add_list.assert_called_once_with(archival_list_name, "top")
 
 
 class Test_create_archival_list_if_not_found:
