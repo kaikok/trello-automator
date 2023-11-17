@@ -89,5 +89,62 @@ class Test_find_sync_new_cards:
             mocked_daily_config.root.tasks.card_sync.source_boards[0]["list_names"]["todo"]
         ) 
 
+    def test_find_single_source_board_with_two_cards(self, mocker):
+        mocked_daily_config = mocker.Mock()
+        mocked_daily_config.root.tasks.card_sync.source_boards = json.loads(json.dumps([{
+                "name" : "board_a",
+                "list_names": {
+                    "todo" : "todo_list_name",
+                    "in_progress" : "in_progress_list_name",
+                    "done" : "done_list_name",
+                }
+            }], indent="  "))
+        mocked_daily_config.root.tasks.card_sync.destination_board = json.loads(json.dumps({
+            "name" : "board_c",
+            "list_names": {
+                "todo" : "todo_list_name",
+                "in_progress" : "in_progress_list_name",
+                "done" : "done_list_name",
+            }}, indent="  "))
+        context = {
+            "card_sync_lookup" : {
+                "source": {},
+                "placeholder": {}
+            },
+            "board_lookup" : {
+                "board_a" : None,
+                "board_c" : None
+            }
+        }
+        source_list = mocker.Mock()
+        
+        mocked_card_a = mocker.Mock()
+        mocked_card_a.id = "123"
+        mocked_card_b = mocker.Mock()
+        mocked_card_b.id = "456"
+
+        mocked_placeholder_card_a = mocker.Mock()
+        mocked_placeholder_card_a.id = "p123"
+        mocked_placeholder_card_b = mocker.Mock()
+        mocked_placeholder_card_b.id = "p456"
+
+        source_list.list_cards.return_value = [mocked_card_a, mocked_card_b]
+        mocked_retrieve_list_from_trello = mocker.patch(
+            "sync_cards.retrieve_list_from_trello",
+            return_value = source_list)
+        mocked_create_placeholder_card = mocker.patch(
+            "sync_cards.create_placeholder_card")
+        mocked_create_placeholder_card.side_effect = [mocked_placeholder_card_a, mocked_placeholder_card_b]
+        assert find_sync_new_cards(context, mocked_daily_config) == context["card_sync_lookup"]
+        assert context["card_sync_lookup"]["source"][mocked_card_a.id] == mocked_placeholder_card_a
+        assert context["card_sync_lookup"]["source"][mocked_card_b.id] == mocked_placeholder_card_b
+        assert context["card_sync_lookup"]["placeholder"][mocked_placeholder_card_a.id] == mocked_card_a
+        assert context["card_sync_lookup"]["placeholder"][mocked_placeholder_card_b.id] == mocked_card_b
+        mocked_retrieve_list_from_trello.assert_called_once_with(
+            context["board_lookup"],
+            mocked_daily_config.root.tasks.card_sync.source_boards[0]["name"],
+            mocked_daily_config.root.tasks.card_sync.source_boards[0]["list_names"]["todo"]
+        )
+
 class Test_sync_all_cards:
     pass

@@ -24,6 +24,12 @@ def find_sync_new_cards(context, config):
     source_cards = source_list.list_cards()
     for card in source_cards:
         is_synced = context['card_sync_lookup'].get(card.id) != None
-        if not is_synced:
-            context["card_sync_lookup"][card.id] = card
+        if (not is_synced):
+            placeholder_card = create_placeholder_card(context, config, card)
+            context["card_sync_lookup"]["source"][card.id] = placeholder_card
+            context["card_sync_lookup"]["placeholder"][placeholder_card.id] = card
+    print(context["card_sync_lookup"])
     return context["card_sync_lookup"]
+
+def create_placeholder_card(context, config, card):
+    pass
