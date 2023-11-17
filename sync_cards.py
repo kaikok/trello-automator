@@ -14,3 +14,6 @@ def load_card_sync_lookup(config):
     except FileNotFoundError:
         card_sync_lookup = {}
     return card_sync_lookup
+
+def find_sync_new_cards(context, config):
+    return []

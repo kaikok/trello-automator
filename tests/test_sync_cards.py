@@ -1,6 +1,6 @@
 import os
 import json
-from sync_cards import perform_sync_cards, load_card_sync_lookup
+from sync_cards import perform_sync_cards, load_card_sync_lookup, find_sync_new_cards
 
 
 class Test_perform_sync_cards:
@@ -50,7 +50,34 @@ class Test_load_card_sync_lookup:
         assert load_card_sync_lookup(mocked_daily_config) == card_sync_lookup
 
 class Test_find_sync_new_cards:
-    pass
+    def test_find_single_source_board_with_no_cards(self, mocker):
+        mocked_daily_config = mocker.Mock()
+        mocked_daily_config.root.tasks.card_sync.source_boards = json.loads(json.dumps([{
+                "name" : "board_a",
+                "list_names": {
+                    "todo" : "todo_list_name",
+                    "in_progress" : "in_progress_list_name",
+                    "done" : "done_list_name",
+                }
+            }], indent="  "))
+        mocked_daily_config.root.tasks.card_sync.destination_board = json.loads(json.dumps({
+            "name" : "board_c",
+            "list_names": {
+                "todo" : "todo_list_name",
+                "in_progress" : "in_progress_list_name",
+                "done" : "done_list_name",
+            }}, indent="  "))
+        context = {
+            "card_sync_lookup" : {
+                "source": {},
+                "placeholder": {}
+            },
+            "board_lookup" : {
+                "board_a" : None,
+                "board_c" : None
+            }
+        }
+        assert find_sync_new_cards(context, mocked_daily_config) == []
 
 class Test_sync_all_cards:
     pass
