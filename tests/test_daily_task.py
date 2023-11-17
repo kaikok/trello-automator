@@ -565,8 +565,8 @@ class Test_calculate_sprint_dates_for_given_date:
             previous_previous_start_date, previous_previous_end_date)
 
 
-class Test_retrieve_done_list_from_trello:
-    def test_retrieve_done_list_from_trello(self, mocker):
+class Test_retrieve_list_from_trello:
+    def test_retrieve_list_from_trello(self, mocker):
         board_one = mocker.Mock()
         board_name = "board-one-name"
         board_lookup = {"board-one-name": board_one}
@@ -583,7 +583,7 @@ class Test_retrieve_done_list_from_trello:
         results = [list_one, list_two]
         board_one.get_lists.return_value = results
 
-        assert daily_run.retrieve_done_list_from_trello(
+        assert daily_run.retrieve_list_from_trello(
             board_lookup, board_name, done_list_name) == list_two
 
         board_one.get_lists.assert_called_once_with("all")
@@ -746,8 +746,8 @@ class Test_find_done_card_and_create_archival_jobs:
         mocked_create_card_action_list_lookup = mocker.patch(
             "daily_run.create_card_action_list_lookup",
             return_value=card_action_list_lookup)
-        mocked_retrieve_done_list_from_trello = mocker.patch(
-            "daily_run.retrieve_done_list_from_trello",
+        mocked_retrieve_list_from_trello = mocker.patch(
+            "daily_run.retrieve_list_from_trello",
             return_value=done_list)
         mocked_get_move_to_done_list_date = mocker.patch(
             "daily_run.get_move_to_done_list_date",
@@ -758,7 +758,7 @@ class Test_find_done_card_and_create_archival_jobs:
 
         mocked_create_card_action_list_lookup.assert_called_once_with(
             action_list)
-        mocked_retrieve_done_list_from_trello.assert_called_once_with(
+        mocked_retrieve_list_from_trello.assert_called_once_with(
             board_lookup, board_name, done_list_name)
         mocked_get_move_to_done_list_date.assert_called_once_with(
             card_action_list_lookup, done_card.id, done_list.id)

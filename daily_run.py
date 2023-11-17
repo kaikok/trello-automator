@@ -214,7 +214,7 @@ def find_done_card_and_create_archival_jobs(
         board_lookup, board_name, action_list, done_list_name):
     archival_jobs = []
     card_action_list_lookup = create_card_action_list_lookup(action_list)
-    done_list = retrieve_done_list_from_trello(
+    done_list = retrieve_list_from_trello(
         board_lookup, board_name, done_list_name)
     done_cards = done_list.list_cards()
     for done_card in done_cards:
@@ -237,10 +237,10 @@ def create_card_action_list_lookup(action_list):
     return card_action_list_lookup
 
 
-def retrieve_done_list_from_trello(board_lookup, board_name, done_list_name):
+def retrieve_list_from_trello(board_lookup, board_name, list_name):
     lists = board_lookup[board_name].get_lists("all")
     list_lookup = {list.name: list for list in lists}
-    return list_lookup[done_list_name]
+    return list_lookup[list_name]
 
 
 def get_move_to_done_list_date(card_action_list_lookup, card_id, done_list_id):
