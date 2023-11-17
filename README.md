@@ -75,7 +75,7 @@ The configuration input required for this task are as follows:
 
 ```JSON
 {
-  "tasks": [
+  "tasks": {
     "card_sync" : {
       "persistence" :{
         "json_file": "card_sync.json"
@@ -107,7 +107,7 @@ The configuration input required for this task are as follows:
         }
       ]
     }
-  ]
+  }
 }
 ```
 

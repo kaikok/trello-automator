@@ -1,3 +1,6 @@
+import json
+
+
 def perform_sync_cards(context, config):
     # context["card_sync_lookup"] = \
     #     load_card_sync_lookup(config)
@@ -6,4 +9,8 @@ def perform_sync_cards(context, config):
     pass
 
 def load_card_sync_lookup(config):
-    pass
+    try:
+        card_sync_lookup = json.load(open(config.root.tasks.card_sync.persistence.json_file, "r"))
+    except FileNotFoundError:
+        card_sync_lookup = {}
+    return card_sync_lookup
