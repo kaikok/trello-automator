@@ -77,7 +77,17 @@ class Test_find_sync_new_cards:
                 "board_c" : None
             }
         }
-        assert find_sync_new_cards(context, mocked_daily_config) == []
+        source_list = mocker.Mock()
+        source_list.list_cards.return_value = []
+        mocked_retrieve_list_from_trello = mocker.patch(
+            "sync_cards.retrieve_list_from_trello",
+            return_value = source_list)
+        assert find_sync_new_cards(context, mocked_daily_config) == context["card_sync_lookup"]
+        mocked_retrieve_list_from_trello.assert_called_once_with(
+            context["board_lookup"],
+            mocked_daily_config.root.tasks.card_sync.source_boards[0]["name"],
+            mocked_daily_config.root.tasks.card_sync.source_boards[0]["list_names"]["todo"]
+        ) 
 
 class Test_sync_all_cards:
     pass
