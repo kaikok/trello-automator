@@ -299,7 +299,7 @@ def calculate_sprint_dates_for_given_date(reference_start_date, given_date):
 
 def create_archival_list_if_not_found(
         board_lookup, archival_board_name, archival_list_name):
-    existing_list = find_archival_list(
+    existing_list = find_list(
         board_lookup, archival_board_name, archival_list_name)
     if existing_list:
         return existing_list
@@ -307,10 +307,10 @@ def create_archival_list_if_not_found(
         board_lookup, archival_board_name, archival_list_name)
 
 
-def find_archival_list(board_lookup, archival_board_name, archival_list_name):
-    lists = board_lookup[archival_board_name].get_lists("open")
+def find_list(board_lookup, board_name, list_name):
+    lists = board_lookup[board_name].get_lists("open")
     list_lookup = {list.name: list for list in lists}
-    return list_lookup.get(archival_list_name)
+    return list_lookup.get(list_name)
 
 
 def create_archival_list(

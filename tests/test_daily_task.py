@@ -589,23 +589,23 @@ class Test_retrieve_list_from_trello:
         board_one.get_lists.assert_called_once_with("all")
 
 
-class Test_find_archival_list:
-    def test_find_archival_list(self, mocker):
-        archival_list_name = "new-archival-list-name"
+class Test_find_list:
+    def test_find_list(self, mocker):
+        list_name = "wanted-list-name"
 
         list_one = mocker.Mock()
         list_one.name = "name-list-one"
         list_two = mocker.Mock()
-        list_two.name = archival_list_name
+        list_two.name = list_name
         lists = [list_one, list_two]
 
         board_one = mocker.Mock()
-        archival_board_name = "board-one-name"
+        board_name = "board-one-name"
         board_lookup = {"board-one-name": board_one}
         board_one.get_lists.return_value = lists
 
-        assert daily_run.find_archival_list(
-            board_lookup, archival_board_name, archival_list_name) == list_two
+        assert daily_run.find_list(
+            board_lookup, board_name, list_name) == list_two
 
 
 class Test_create_archival_list:
@@ -628,14 +628,14 @@ class Test_create_archival_list_if_not_found:
         archival_list_name = "archival-list-name"
         list = "list"
 
-        mocked_find_archival_list = mocker.patch(
-            "daily_run.find_archival_list",
+        mocked_find_list = mocker.patch(
+            "daily_run.find_list",
             return_value=list)
 
         assert daily_run.create_archival_list_if_not_found(
             board_lookup, archival_board_name, archival_list_name) == list
 
-        mocked_find_archival_list.assert_called_once_with(
+        mocked_find_list.assert_called_once_with(
             board_lookup, archival_board_name, archival_list_name)
 
     def test_archival_list_not_found(self, mocker):
@@ -644,8 +644,8 @@ class Test_create_archival_list_if_not_found:
         archival_list_name = "archival-list-name"
         list = "list"
 
-        mocked_find_archival_list = mocker.patch(
-            "daily_run.find_archival_list",
+        mocked_find_list = mocker.patch(
+            "daily_run.find_list",
             return_value=None)
         mocked_create_archival_list = mocker.patch(
             "daily_run.create_archival_list",
@@ -654,7 +654,7 @@ class Test_create_archival_list_if_not_found:
         assert daily_run.create_archival_list_if_not_found(
             board_lookup, archival_board_name, archival_list_name) == list
 
-        mocked_find_archival_list.assert_called_once_with(
+        mocked_find_list.assert_called_once_with(
             board_lookup, archival_board_name, archival_list_name)
         mocked_create_archival_list.assert_called_once_with(
             board_lookup, archival_board_name, archival_list_name)
