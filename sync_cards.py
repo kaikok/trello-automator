@@ -1,5 +1,5 @@
 import json
-from daily_run import retrieve_list_from_trello
+from daily_run import find_list
 
 
 def perform_sync_cards(context, config):
@@ -17,7 +17,7 @@ def load_card_sync_lookup(config):
     return card_sync_lookup
 
 def update_sync_cards(context, config):
-    source_list = retrieve_list_from_trello(
+    source_list = find_list(
         context["board_lookup"], 
         config.root.tasks.card_sync.source_boards[0]["name"],
         config.root.tasks.card_sync.source_boards[0]["list_names"]["todo"])

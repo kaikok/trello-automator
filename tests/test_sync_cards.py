@@ -96,11 +96,11 @@ class Test_update_sync_cards:
 
         source_list_on_trello = mocker.Mock()
         source_list_on_trello.list_cards.return_value = []
-        mocked_retrieve_list_from_trello = mocker.patch(
-            "sync_cards.retrieve_list_from_trello",
+        mocked_find_list = mocker.patch(
+            "sync_cards.find_list",
             return_value = source_list_on_trello)
         assert update_sync_cards(context, mocked_daily_config) == context["card_sync_lookup"]
-        mocked_retrieve_list_from_trello.assert_called_once_with(
+        mocked_find_list.assert_called_once_with(
             context["board_lookup"],
             source_boards[0]["name"],
             mocked_daily_config.root.tasks.card_sync.source_boards[0]["list_names"]["todo"]
@@ -146,8 +146,8 @@ class Test_update_sync_cards:
         mocked_placeholder_card_b.id = "p456"
 
         source_list.list_cards.return_value = [mocked_card_a, mocked_card_b]
-        mocked_retrieve_list_from_trello = mocker.patch(
-            "sync_cards.retrieve_list_from_trello",
+        mocked_find_list = mocker.patch(
+            "sync_cards.find_list",
             return_value = source_list)
         mocked_create_placeholder_card = mocker.patch(
             "sync_cards.create_placeholder_card")
