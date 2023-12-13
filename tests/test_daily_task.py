@@ -781,7 +781,7 @@ class Test_perform_archival:
             "action_list": action_list,
             "board_lookup": board_lookup
         }
-        
+
         mocked_daily_config.archival_board_name = "ABC"
         mocked_daily_config.board_name = "DEF"
         mocked_daily_config.done_list_name = "GHI"

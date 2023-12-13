@@ -43,7 +43,7 @@ class Test_config_class:
                 ]
             }
             config_string = json.dumps(config_json, indent="  ")
-            
+
             mocked_load_dotenv = mocker.patch("daily_config.load_dotenv")
             fs.create_file("/config.json", contents=config_string)
             os.environ["CONFIG_FILE"] = "/config.json"
