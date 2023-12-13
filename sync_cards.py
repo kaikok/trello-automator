@@ -16,7 +16,7 @@ def load_card_sync_lookup(config):
         card_sync_lookup = {}
     return card_sync_lookup
 
-def find_sync_new_cards(context, config):
+def update_sync_cards(context, config):
     source_list = retrieve_list_from_trello(
         context["board_lookup"], 
         config.root.tasks.card_sync.source_boards[0]["name"],
@@ -31,5 +31,13 @@ def find_sync_new_cards(context, config):
     print(context["card_sync_lookup"])
     return context["card_sync_lookup"]
 
-def create_placeholder_card(context, config, card):
+def find_new_cards(card_sync_lookup, card_list):
+    new_cards = []
+    for card in card_list:
+        not_synced = (card_sync_lookup["source"].get(card.id) == None)
+        if (not_synced):
+            new_cards.append(card) 
+    return new_cards
+
+def create_placeholder_card(card_sync_lookup, card_list):
     pass

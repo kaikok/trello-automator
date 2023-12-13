@@ -1,7 +1,18 @@
 import os
 import json
-from sync_cards import perform_sync_cards, load_card_sync_lookup, find_sync_new_cards
+from sync_cards import \
+    perform_sync_cards,\
+    load_card_sync_lookup,\
+    update_sync_cards,\
+    find_new_cards
 
+class Struct:
+    def __init__(self, **kwargs):
+        for key, value in kwargs.items():
+            if isinstance(value, dict):
+                self.__dict__[key] = Struct(**value)
+            else:
+                self.__dict__[key] = value
 
 class Test_perform_sync_cards:
     def test_method_exist(self, mocker):
@@ -49,24 +60,29 @@ class Test_load_card_sync_lookup:
             os.getcwd() + "/tests/card_sync.json"
         assert load_card_sync_lookup(mocked_daily_config) == card_sync_lookup
 
-class Test_find_sync_new_cards:
+class Test_update_sync_cards:
     def test_find_single_source_board_with_no_cards(self, mocker):
-        mocked_daily_config = mocker.Mock()
-        mocked_daily_config.root.tasks.card_sync.source_boards = json.loads(json.dumps([{
-                "name" : "board_a",
-                "list_names": {
-                    "todo" : "todo_list_name",
-                    "in_progress" : "in_progress_list_name",
-                    "done" : "done_list_name",
-                }
-            }], indent="  "))
-        mocked_daily_config.root.tasks.card_sync.destination_board = json.loads(json.dumps({
+        source_boards = json.loads(json.dumps([{
+            "name" : "board_a",
+            "list_names": {
+                "todo" : "todo_list_name",
+                "in_progress" : "in_progress_list_name",
+                "done" : "done_list_name",
+            }
+        }], indent="  "))
+
+        destination_board = json.loads(json.dumps({
             "name" : "board_c",
             "list_names": {
                 "todo" : "todo_list_name",
                 "in_progress" : "in_progress_list_name",
                 "done" : "done_list_name",
-            }}, indent="  "))
+        }}, indent="  "))
+
+        mocked_daily_config = mocker.Mock()
+        mocked_daily_config.root.tasks.card_sync.source_boards = source_boards
+        mocked_daily_config.root.tasks.card_sync.destination_board = destination_board
+
         context = {
             "card_sync_lookup" : {
                 "source": {},
@@ -77,17 +93,18 @@ class Test_find_sync_new_cards:
                 "board_c" : None
             }
         }
-        source_list = mocker.Mock()
-        source_list.list_cards.return_value = []
+
+        source_list_on_trello = mocker.Mock()
+        source_list_on_trello.list_cards.return_value = []
         mocked_retrieve_list_from_trello = mocker.patch(
             "sync_cards.retrieve_list_from_trello",
-            return_value = source_list)
-        assert find_sync_new_cards(context, mocked_daily_config) == context["card_sync_lookup"]
+            return_value = source_list_on_trello)
+        assert update_sync_cards(context, mocked_daily_config) == context["card_sync_lookup"]
         mocked_retrieve_list_from_trello.assert_called_once_with(
             context["board_lookup"],
-            mocked_daily_config.root.tasks.card_sync.source_boards[0]["name"],
+            source_boards[0]["name"],
             mocked_daily_config.root.tasks.card_sync.source_boards[0]["list_names"]["todo"]
-        ) 
+        )
 
     def test_find_single_source_board_with_two_cards(self, mocker):
         mocked_daily_config = mocker.Mock()
@@ -135,7 +152,7 @@ class Test_find_sync_new_cards:
         mocked_create_placeholder_card = mocker.patch(
             "sync_cards.create_placeholder_card")
         mocked_create_placeholder_card.side_effect = [mocked_placeholder_card_a, mocked_placeholder_card_b]
-        assert find_sync_new_cards(context, mocked_daily_config) == context["card_sync_lookup"]
+        assert update_sync_cards(context, mocked_daily_config) == context["card_sync_lookup"]
         assert context["card_sync_lookup"]["source"][mocked_card_a.id] == mocked_placeholder_card_a
         assert context["card_sync_lookup"]["source"][mocked_card_b.id] == mocked_placeholder_card_b
         assert context["card_sync_lookup"]["placeholder"][mocked_placeholder_card_a.id] == mocked_card_a
@@ -145,6 +162,49 @@ class Test_find_sync_new_cards:
             mocked_daily_config.root.tasks.card_sync.source_boards[0]["name"],
             mocked_daily_config.root.tasks.card_sync.source_boards[0]["list_names"]["todo"]
         )
+
+class Test_find_new_cards:
+    def test_no_cards_on_list(mocker):
+        card_list = []
+        card_sync_lookup = {
+                "source": {},
+                "placeholder": {}
+            }
+        assert find_new_cards(card_sync_lookup, card_list) == []
+
+    def test_one_new_card_on_list(mocker):
+        card = Struct(
+            **{
+                "id": "cardOneID123"
+            }
+        )
+        card_list = [card]
+        card_sync_lookup = {
+                "source": {},
+                "placeholder": {}
+            }
+        assert find_new_cards(card_sync_lookup, card_list) == [card]
+
+    def test_one_existing_card_on_list(mocker):
+        card = Struct(
+            **{
+                "id": "cardOneID123"
+            }
+        )
+        card_list = [card]
+        card_sync_lookup = {
+                "source": {
+                    "cardOneID123": {
+                        "placeholder": "cardOnePlaceholderID123"
+                    }
+                },
+                "placeholder": {
+                    "cardOnePlaceholderID123": {
+                        "source": "cardOneID123"
+                    }
+                }
+            }
+        assert find_new_cards(card_sync_lookup, card_list) == []
 
 class Test_sync_all_cards:
     pass
