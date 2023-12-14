@@ -24,14 +24,17 @@ def update_sync_cards(context, config):
         context["board_lookup"],
         config.root.tasks.card_sync.source_boards[0]["name"],
         config.root.tasks.card_sync.source_boards[0]["list_names"]["todo"])
+    placeholder_list = find_list(
+        context["board_lookup"],
+        config.root.tasks.card_sync.destination_board["name"],
+        config.root.tasks.card_sync.destination_board["list_names"]["todo"])
+
     source_cards = source_list.list_cards()
-    for card in source_cards:
-        is_synced = context['card_sync_lookup'].get(card.id) != None
-        if (not is_synced):
-            placeholder_card = create_placeholder_card(context, config, card)
-            context["card_sync_lookup"]["source"][card.id] = placeholder_card
-            context["card_sync_lookup"]["placeholder"][placeholder_card.id] = card
-    print(context["card_sync_lookup"])
+    new_cards = find_new_cards(source_cards)
+    for new_card in new_cards:
+        placeholder_card = create_placeholder_card(new_card, placeholder_list)
+        context['card_sync_lookup'] = add_lookup(
+            context['card_sync_lookup'], new_card, placeholder_card)
     return context["card_sync_lookup"]
 
 
