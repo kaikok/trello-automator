@@ -1,7 +1,9 @@
 import os
 from datetime import datetime
 import trello
+import daily_config
 import daily_run
+import trello_helper
 
 
 class Test_load_action_list:
@@ -604,7 +606,7 @@ class Test_find_list:
         board_lookup = {"board-one-name": board_one}
         board_one.get_lists.return_value = lists
 
-        assert daily_run.find_list(
+        assert trello_helper.find_list(
             board_lookup, board_name, list_name) == list_two
 
 
@@ -928,6 +930,9 @@ class Test_run:
         mocked_perform_archival = mocker.patch(
             "daily_run.perform_archival",
             return_value=None)
+        mocked_perform_sync_cards = mocker.patch(
+            "daily_run.perform_sync_cards",
+            return_value=None)
 
         daily_run.run()
 
@@ -940,6 +945,8 @@ class Test_run:
             mocked_daily_config)
         mocked_update_cards_and_actions.assert_not_called()
         mocked_perform_archival.assert_called_once_with(
+            context, mocked_daily_config)
+        mocked_perform_sync_cards.assert_called_once_with(
             context, mocked_daily_config)
 
     def test_non_empty_action_list(self, mocker):
@@ -980,6 +987,9 @@ class Test_run:
         mocked_perform_archival = mocker.patch(
             "daily_run.perform_archival",
             return_value=None)
+        mocked_perform_sync_cards = mocker.patch(
+            "daily_run.perform_sync_cards",
+            return_value=None)
 
         daily_run.run()
 
@@ -991,4 +1001,6 @@ class Test_run:
             context, mocked_daily_config)
         mocked_first_time_load.assert_not_called()
         mocked_perform_archival.assert_called_once_with(
+            context, mocked_daily_config)
+        mocked_perform_sync_cards.assert_called_once_with(
             context, mocked_daily_config)

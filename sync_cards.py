@@ -1,36 +1,38 @@
 import json
-from daily_run import find_list
+from trello_helper import find_list
 
 
 def perform_sync_cards(context, config):
-    # context["card_sync_lookup"] = \
-    #     load_card_sync_lookup(config)
-    # context["card_sync_lookup"] = find_sync_new_cards(context, config)
-    # sync_all_cards(context, config)
-    pass
+    context["card_sync_lookup"] = \
+        load_card_sync_lookup(config)
+    context["card_sync_lookup"] = update_sync_cards(context, config)
+    save_card_sync_lookup(context["card_sync_lookup"], config)
 
 
 def load_card_sync_lookup(config):
     try:
         card_sync_lookup = json.load(
-            open(config.root.tasks.card_sync.persistence.json_file, "r"))
+            open(config.root["tasks"]["card_sync"]["persistence"]["json_file"], "r"))
     except FileNotFoundError:
-        card_sync_lookup = {}
+        card_sync_lookup = {
+            "source": {},
+            "placeholder": {}
+        }
     return card_sync_lookup
 
 
 def update_sync_cards(context, config):
     source_list = find_list(
         context["board_lookup"],
-        config.root.tasks.card_sync.source_boards[0]["name"],
-        config.root.tasks.card_sync.source_boards[0]["list_names"]["todo"])
+        config.root["tasks"]["card_sync"]["source_boards"][0]["name"],
+        config.root["tasks"]["card_sync"]["source_boards"][0]["list_names"]["todo"])
     placeholder_list = find_list(
         context["board_lookup"],
-        config.root.tasks.card_sync.destination_board["name"],
-        config.root.tasks.card_sync.destination_board["list_names"]["todo"])
+        config.root["tasks"]["card_sync"]["destination_board"]["name"],
+        config.root["tasks"]["card_sync"]["destination_board"]["list_names"]["todo"])
 
     source_cards = source_list.list_cards()
-    new_cards = find_new_cards(source_cards)
+    new_cards = find_new_cards(context['card_sync_lookup'], source_cards)
     for new_card in new_cards:
         placeholder_card = create_placeholder_card(new_card, placeholder_list)
         context['card_sync_lookup'] = add_lookup(
@@ -57,3 +59,8 @@ def add_lookup(card_sync_lookup, source_card, placeholder_card):
     card_sync_lookup["placeholder"][placeholder_card.id] = {
         "source": source_card.id}
     return card_sync_lookup
+
+
+def save_card_sync_lookup(card_sync_lookup, config):
+    json.dump(card_sync_lookup,
+              open(config.root["tasks"]["card_sync"]["persistence"]["json_file"], "w"), indent="  ")

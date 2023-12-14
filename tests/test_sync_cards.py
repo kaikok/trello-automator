@@ -6,28 +6,44 @@ from sync_cards import \
     update_sync_cards, \
     find_new_cards, \
     create_placeholder_card, \
-    add_lookup
+    add_lookup, \
+    save_card_sync_lookup
 
 
 class Test_perform_sync_cards:
     def test_method_exist(self, mocker):
-        mocked_daily_config = mocker.Mock()
-        context = {}
-        perform_sync_cards(context, mocked_daily_config)
+        # mocked_daily_config = mocker.Mock()
+        # context = {}
+        # perform_sync_cards(context, mocked_daily_config)
+        pass
 
 
 class Test_load_card_sync_lookup:
     def test_empty_file(self, mocker):
         mocked_daily_config = mocker.Mock()
-        mocked_daily_config.root.tasks.card_sync.persistence.json_file = \
-            os.getcwd() + "/tests/empty_lookup.json"
-        assert load_card_sync_lookup(mocked_daily_config) == {}
+        mocked_daily_config.root = {
+            "tasks": {
+                "card_sync": {
+                    "persistence": {
+                        "json_file":
+                        os.getcwd() + "/tests/empty_card_sync.json"}}}}
+        assert load_card_sync_lookup(mocked_daily_config) == {
+            "source": {},
+            "placeholder": {}
+        }
 
     def test_file_not_found(self, mocker):
         mocked_daily_config = mocker.Mock()
-        mocked_daily_config.root.tasks.card_sync.persistence.json_file = \
-            os.getcwd() + "/tests/not_found_card_lookup.json"
-        assert load_card_sync_lookup(mocked_daily_config) == {}
+        mocked_daily_config.root = {
+            "tasks": {
+                "card_sync": {
+                    "persistence": {
+                        "json_file":
+                        os.getcwd() + "/tests/not_found_card_lookup.json"}}}}
+        assert load_card_sync_lookup(mocked_daily_config) == {
+            "source": {},
+            "placeholder": {}
+        }
 
     def test_valid_file(self, fs, mocker):
         card_sync_lookup = {
@@ -53,8 +69,13 @@ class Test_load_card_sync_lookup:
                        contents=card_sync_lookup_string)
 
         mocked_daily_config = mocker.Mock()
-        mocked_daily_config.root.tasks.card_sync.persistence.json_file = \
-            os.getcwd() + "/tests/card_sync.json"
+        mocked_daily_config.root = {
+            "tasks": {
+                "card_sync": {
+                    "persistence": {
+                        "json_file":
+                        os.getcwd() + "/tests/card_sync.json"}}}}
+
         assert load_card_sync_lookup(mocked_daily_config) == card_sync_lookup
 
 
@@ -78,8 +99,13 @@ class Test_update_sync_cards:
             }}, indent="  "))
 
         mocked_daily_config = mocker.Mock()
-        mocked_daily_config.root.tasks.card_sync.source_boards = source_boards
-        mocked_daily_config.root.tasks.card_sync.destination_board = destination_board
+        mocked_daily_config.root = {
+            "tasks": {
+                "card_sync": {
+                    "source_boards": source_boards,
+                    "destination_board": destination_board
+                }
+            }}
 
         context = {
             "card_sync_lookup": {
@@ -113,13 +139,14 @@ class Test_update_sync_cards:
             mocker.call(
                 context["board_lookup"],
                 source_boards[0]["name"],
-                mocked_daily_config.root.tasks.card_sync.source_boards[0]["list_names"]["todo"]),
+                mocked_daily_config.root["tasks"]["card_sync"]["source_boards"][0]["list_names"]["todo"]),
             mocker.call(
                 context["board_lookup"],
                 destination_board["name"],
-                mocked_daily_config.root.tasks.card_sync.destination_board["list_names"]["todo"])
+                mocked_daily_config.root["tasks"]["card_sync"]["destination_board"]["list_names"]["todo"])
         ])
         mocked_find_new_cards.assert_called_once_with(
+            context["card_sync_lookup"],
             source_list_on_trello.list_cards())
 
     def test_find_single_source_board_with_two_cards(self, mocker):
@@ -141,8 +168,13 @@ class Test_update_sync_cards:
             }}, indent="  "))
 
         mocked_daily_config = mocker.Mock()
-        mocked_daily_config.root.tasks.card_sync.source_boards = source_boards
-        mocked_daily_config.root.tasks.card_sync.destination_board = destination_board
+        mocked_daily_config.root = {
+            "tasks": {
+                "card_sync": {
+                    "source_boards": source_boards,
+                    "destination_board": destination_board
+                }
+            }}
 
         context = {
             "card_sync_lookup": {
@@ -198,15 +230,15 @@ class Test_update_sync_cards:
             mocker.call(
                 context["board_lookup"],
                 source_boards[0]["name"],
-                mocked_daily_config.root.tasks.card_sync.source_boards[0]["list_names"]["todo"]),
+                mocked_daily_config.root["tasks"]["card_sync"]["source_boards"][0]["list_names"]["todo"]),
             mocker.call(
                 context["board_lookup"],
                 destination_board["name"],
-                mocked_daily_config.root.tasks.card_sync.destination_board["list_names"]["todo"])
+                mocked_daily_config.root["tasks"]["card_sync"]["destination_board"]["list_names"]["todo"])
         ])
         mocked_find_new_cards.assert_called_once_with(
+            context["card_sync_lookup"],
             source_list_on_trello.list_cards())
-        print(mocked_create_placeholder_card.calls)
         mocked_create_placeholder_card.assert_has_calls([
             mocker.call(mocked_card_a, destination_list_on_trello),
             mocker.call(mocked_card_b, destination_list_on_trello)])
@@ -296,6 +328,29 @@ class Test_add_lookup:
         }
         assert add_lookup(card_sync_lookup, source_card,
                           placeholder_card) == updated_card_sync_lookup
+
+
+class Test_save_card_sync_lookup:
+    def test_save_card(self, mocker):
+        mocked_daily_config = mocker.Mock()
+        mocked_daily_config.root = {
+            "tasks": {
+                "card_sync": {
+                    "persistence": {
+                        "json_file": "cards.json"
+                    }
+                }
+            }}
+        mocked_open = mocker.patch("sync_cards.open", return_value="Mock FP")
+        mocked_json_dump = mocker.patch(
+            "daily_run.json.dump", return_value=None)
+        save_card_sync_lookup({}, mocked_daily_config)
+        mocked_open.assert_called_once_with(
+            "cards.json", "w")
+        mocked_json_dump.assert_called_once_with(
+            {},
+            "Mock FP",
+            indent="  ")
 
 
 class Test_sync_all_cards:

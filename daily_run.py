@@ -7,6 +7,8 @@ import math
 import time
 from tqdm import tqdm
 from daily_config import Daily_config
+from sync_cards import perform_sync_cards
+from trello_helper import find_list
 
 
 def run():
@@ -24,6 +26,7 @@ def run():
         context["action_list"], context["card_json_lookup"] = \
             update_cards_and_actions(context, config)
     perform_archival(context, config)
+    perform_sync_cards(context, config)
 
 
 def load_from_local(config):
@@ -305,12 +308,6 @@ def create_archival_list_if_not_found(
         return existing_list
     return create_archival_list(
         board_lookup, archival_board_name, archival_list_name)
-
-
-def find_list(board_lookup, board_name, list_name):
-    lists = board_lookup[board_name].get_lists("open")
-    list_lookup = {list.name: list for list in lists}
-    return list_lookup.get(list_name)
 
 
 def create_archival_list(

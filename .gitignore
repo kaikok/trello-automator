@@ -64,3 +64,5 @@ secrets.json
 # Application related
 cards.json
 actions.json
+card_sync.json
+config.json
