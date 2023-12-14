@@ -22,16 +22,21 @@ def load_card_sync_lookup(config):
 
 
 def update_sync_cards(context, config):
-    source_list = find_list(
-        context["board_lookup"],
-        config.root["tasks"]["card_sync"]["source_boards"][0]["name"],
-        config.root["tasks"]["card_sync"]["source_boards"][0]["list_names"]["todo"])
+    source_cards = []
+
+    for source_board in config.root["tasks"]["card_sync"]["source_boards"]:
+        source_list = find_list(
+            context["board_lookup"],
+            source_board["name"],
+            source_board["list_names"]["todo"])
+        for source_card in source_list.list_cards():
+            source_cards.append(source_card)
+
     placeholder_list = find_list(
         context["board_lookup"],
         config.root["tasks"]["card_sync"]["destination_board"]["name"],
         config.root["tasks"]["card_sync"]["destination_board"]["list_names"]["todo"])
 
-    source_cards = source_list.list_cards()
     new_cards = find_new_cards(context['card_sync_lookup'], source_cards)
     for new_card in new_cards:
         placeholder_card = create_placeholder_card(new_card, placeholder_list)
