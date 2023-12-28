@@ -3,7 +3,7 @@ import json
 from sync_cards import \
     perform_sync_cards, \
     load_card_sync_lookup, \
-    update_sync_cards, \
+    add_new_sync_cards, \
     find_new_cards, \
     create_placeholder_card, \
     add_lookup, \
@@ -79,7 +79,7 @@ class Test_load_card_sync_lookup:
         assert load_card_sync_lookup(mocked_daily_config) == card_sync_lookup
 
 
-class Test_update_sync_cards:
+class Test_add_new_sync_cards:
     def test_find_single_source_board_with_no_cards(self, mocker):
         source_boards = json.loads(json.dumps([{
             "name": "board_a",
@@ -133,7 +133,7 @@ class Test_update_sync_cards:
             return_value=[]
         )
 
-        assert update_sync_cards(
+        assert add_new_sync_cards(
             context, mocked_daily_config) == context["card_sync_lookup"]
         mocked_find_list.assert_has_calls([
             mocker.call(
@@ -218,7 +218,7 @@ class Test_update_sync_cards:
         mocked_create_placeholder_card.side_effect = [
             mocked_placeholder_card_a, mocked_placeholder_card_b]
 
-        context["card_sync_lookup"] = update_sync_cards(
+        context["card_sync_lookup"] = add_new_sync_cards(
             context, mocked_daily_config)
 
         assert context["card_sync_lookup"]["source"][mocked_card_a.id]["placeholder"] == mocked_placeholder_card_a.id
@@ -328,7 +328,7 @@ class Test_update_sync_cards:
         mocked_create_placeholder_card.side_effect = [
             mocked_placeholder_card_a, mocked_placeholder_card_b]
 
-        context["card_sync_lookup"] = update_sync_cards(
+        context["card_sync_lookup"] = add_new_sync_cards(
             context, mocked_daily_config)
 
         assert context["card_sync_lookup"]["source"][mocked_card_a.id]["placeholder"] == mocked_placeholder_card_a.id

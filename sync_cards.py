@@ -5,7 +5,7 @@ from trello_helper import find_list
 def perform_sync_cards(context, config):
     context["card_sync_lookup"] = \
         load_card_sync_lookup(config)
-    context["card_sync_lookup"] = update_sync_cards(context, config)
+    context["card_sync_lookup"] = add_new_sync_cards(context, config)
     save_card_sync_lookup(context["card_sync_lookup"], config)
 
 
@@ -21,7 +21,7 @@ def load_card_sync_lookup(config):
     return card_sync_lookup
 
 
-def update_sync_cards(context, config):
+def add_new_sync_cards(context, config):
     source_cards = []
 
     for source_board in config.root["tasks"]["card_sync"]["source_boards"]:
