@@ -412,7 +412,7 @@ class Test_create_placeholder_card:
             source_card, destination_list) == new_card
         destination_list.add_card.assert_called_once_with(
             name=source_card.name,
-            desc=f"SYNC-FROM({source_card.id})\n---\n")
+            desc=f"SYNC-FROM({source_card.id})\n[Goto source card]({source_card.shortUrl})\n---\n")
 
 
 class Test_add_lookup:

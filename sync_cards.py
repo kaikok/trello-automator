@@ -55,7 +55,7 @@ def find_new_cards(card_sync_lookup, list_of_cards):
 
 
 def create_placeholder_card(source_card, destination_list):
-    return destination_list.add_card(name=source_card.name, desc=f"SYNC-FROM({source_card.id})\n---\n")
+    return destination_list.add_card(name=source_card.name, desc=f"SYNC-FROM({source_card.id})\n[Goto source card]({source_card.shortUrl})\n---\n")
 
 
 def add_lookup(card_sync_lookup, source_card, placeholder_card):
