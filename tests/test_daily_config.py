@@ -14,6 +14,7 @@ class Test_config_class:
             os.environ["BOARD_NAME"] = "5"
             os.environ["DONE_LIST_NAME"] = "6"
             os.environ["ARCHIVAL_BOARD_NAME"] = "7"
+            os.environ["AUTOMATION_USERNAME"] = "8"
             if (os.environ.get("CONFIG_FILE") != None):
                 os.environ.pop("CONFIG_FILE")
             config = Daily_config()
@@ -25,6 +26,7 @@ class Test_config_class:
             assert config.board_name == "5"
             assert config.done_list_name == "6"
             assert config.archival_board_name == "7"
+            assert config.automation_username == "8"
             assert config.root is None
 
         def test_load_structured_config_from_json_file(self, fs, mocker):
