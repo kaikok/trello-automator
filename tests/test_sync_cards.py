@@ -501,39 +501,67 @@ class Test_sync_all_cards:
 
 class Test_find_latest_card_movement:
     def test_return_latest_only_move_from_source(self, mocker):
-        source_card_actions = [
-            {
-                "id": "224b90",
-                "data": {
-                "card": {
-                    "id": "6473a5",
-                },
-                "board": {
-                    "id": "8ebadb",
-                    "name": "Source Board 1",
-                },
-                "boardTarget": {
-                    "id": "0c9324"
-                },
-                "list": {
-                    "id": "abb6d6",
-                    "name": "source board in progress"
-                }
-                },
-                "type": "moveCardFromBoard",
-                "date": "2023-09-21T09:02:41.576Z",
-                "memberCreator": {
-                "username": "automation"
-                }
+        action_actual_update = {
+            "id": "224b90",
+            "data": {
+            "card": {
+                "id": "6473a5",
+            },
+            "board": {
+                "id": "8ebadb",
+                "name": "Source Board 1",
+            },
+            "boardTarget": {
+                "id": "0c9324"
+            },
+            "list": {
+                "id": "abb6d6",
+                "name": "source board in progress"
             }
+            },
+            "type": "moveCardFromBoard",
+            "date": "2023-09-21T09:02:41.576Z",
+            "memberCreator": {
+            "username": "expected user"
+            }
+        }
+
+        action_older_update = {
+            "id": "bcbvcvb",
+            "data": {
+            "card": {
+                "id": "6473a5",
+            },
+            "board": {
+                "id": "8ebadb",
+                "name": "Source Board 1",
+            },
+            "boardTarget": {
+                "id": "0c9324"
+            },
+            "list": {
+                "id": "abb6d6",
+                "name": "source board in progress"
+            }
+            },
+            "type": "moveCardFromBoard",
+            "date": "2023-09-21T08:02:41.576Z",
+            "memberCreator": {
+            "username": "expected user"
+            }
+        }
+
+        source_card_actions = [
+            action_actual_update
         ]
 
         source_card = mocker.Mock()
         source_card.id.side_effect = "123"
         source_card.fetch_actions.return_value = source_card_actions
 
-
-        placeholder_card_actions = []
+        placeholder_card_actions = [
+            action_older_update
+        ]
         placeholder_card = mocker.Mock()
         placeholder_card.id.side_effect = "456"
         placeholder_card.fetch_actions.return_value = placeholder_card_actions
@@ -541,6 +569,168 @@ class Test_find_latest_card_movement:
         handle = mocker.Mock()
         handle.get_card.side_effect = [source_card, placeholder_card]
 
-        assert find_latest_card_movement(
-            handle, "123", "456") == source_card_actions[0]
+        context = {
+            "handle": handle
+        }
 
+        mocked_daily_config = mocker.Mock()
+        mocked_daily_config.automation_username = "automation"
+
+        assert find_latest_card_movement(
+            context, mocked_daily_config, "123", "456") == action_actual_update
+
+    def test_return_latest_only_move_from_placeholder(self, mocker):
+        action_actual_update = {
+            "id": "224b90",
+            "data": {
+            "card": {
+                "id": "6473a5",
+            },
+            "board": {
+                "id": "8ebadb",
+                "name": "Source Board 1",
+            },
+            "boardTarget": {
+                "id": "0c9324"
+            },
+            "list": {
+                "id": "abb6d6",
+                "name": "source board in progress"
+            }
+            },
+            "type": "moveCardFromBoard",
+            "date": "2023-09-21T09:02:41.576Z",
+            "memberCreator": {
+            "username": "expected user"
+            }
+        }
+
+        action_newer_update = {
+            "id": "bcbvcvb",
+            "data": {
+            "card": {
+                "id": "6473a5",
+            },
+            "board": {
+                "id": "8ebadb",
+                "name": "Source Board 1",
+            },
+            "boardTarget": {
+                "id": "0c9324"
+            },
+            "list": {
+                "id": "abb6d6",
+                "name": "source board in progress"
+            }
+            },
+            "type": "moveCardFromBoard",
+            "date": "2023-09-21T10:02:41.576Z",
+            "memberCreator": {
+            "username": "expected user"
+            }
+        }
+
+        source_card_actions = [
+            action_actual_update
+        ]
+
+        source_card = mocker.Mock()
+        source_card.id.side_effect = "123"
+        source_card.fetch_actions.return_value = source_card_actions
+
+        placeholder_card_actions = [
+            action_newer_update
+        ]
+        placeholder_card = mocker.Mock()
+        placeholder_card.id.side_effect = "456"
+        placeholder_card.fetch_actions.return_value = placeholder_card_actions
+
+        handle = mocker.Mock()
+        handle.get_card.side_effect = [source_card, placeholder_card]
+
+        context = {
+            "handle": handle
+        }
+
+        mocked_daily_config = mocker.Mock()
+        mocked_daily_config.automation_username = "automation"
+
+        assert find_latest_card_movement(
+            context, mocked_daily_config, "123", "456") == action_newer_update
+
+    def test_return_none_if_not_found(self, mocker):
+        source_card_actions = []
+
+        source_card = mocker.Mock()
+        source_card.id.side_effect = "123"
+        source_card.fetch_actions.return_value = source_card_actions
+
+        placeholder_card_actions = []
+
+        placeholder_card = mocker.Mock()
+        placeholder_card.id.side_effect = "456"
+        placeholder_card.fetch_actions.return_value = placeholder_card_actions
+
+        handle = mocker.Mock()
+        handle.get_card.side_effect = [source_card, placeholder_card]
+
+        context = {
+            "handle": handle
+        }
+
+        mocked_daily_config = mocker.Mock()
+        mocked_daily_config.automation_username = "automation"
+
+        assert find_latest_card_movement(
+            context, mocked_daily_config, "123", "456") == None
+
+    def test_return_none_if_latest_action_is_automation(self, mocker):
+        action_belongs_to_automation = {
+            "id": "fgdgfgfd",
+            "data": {
+            "card": {
+                "id": "6473a5",
+            },
+            "board": {
+                "id": "8ebadb",
+                "name": "Source Board 1",
+            },
+            "boardTarget": {
+                "id": "0c9324"
+            },
+            "list": {
+                "id": "abb6d6",
+                "name": "source board in progress"
+            }
+            },
+            "type": "moveCardFromBoard",
+            "date": "2023-09-21T08:02:41.576Z",
+            "memberCreator": {
+                "username": "automation"
+            }
+        }
+
+        source_card_actions = []
+
+        source_card = mocker.Mock()
+        source_card.id.side_effect = "123"
+        source_card.fetch_actions.return_value = source_card_actions
+
+        placeholder_card_actions = [action_belongs_to_automation]
+        
+        placeholder_card = mocker.Mock()
+        placeholder_card.id.side_effect = "456"
+        placeholder_card.fetch_actions.return_value = placeholder_card_actions
+
+        handle = mocker.Mock()
+        handle.get_card.side_effect = [source_card, placeholder_card]
+
+        context = {
+            "handle": handle
+        }
+
+        mocked_daily_config = mocker.Mock()
+        mocked_daily_config.automation_username = "automation"
+
+        assert find_latest_card_movement(
+            context, mocked_daily_config, "123", "456") == None

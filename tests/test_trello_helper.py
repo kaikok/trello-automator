@@ -36,4 +36,8 @@ class Test_get_card_actions:
         actionList = [action1, action2]
         mocked_card = mocker.Mock()
         mocked_card.fetch_actions.return_value = actionList
-        assert get_card_actions(mocked_card) == actionList
+        action_types = "action_type1,action_type2"
+        assert get_card_actions(mocked_card, action_types) == actionList
+        mocked_card.fetch_actions.assert_called_once_with(
+            action_filter=action_types
+        )

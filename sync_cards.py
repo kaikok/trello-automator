@@ -1,4 +1,5 @@
 import json
+import datetime
 from trello_helper import find_list
 
 
@@ -71,9 +72,27 @@ def save_card_sync_lookup(card_sync_lookup, config):
               open(config.root["tasks"]["card_sync"]["persistence"]["json_file"], "w"), indent="  ")
 
 
-def find_latest_card_movement(handle, source_card_id, placeholder_card_id):
+def find_latest_card_movement(context, config, source_card_id, placeholder_card_id):
+    handle = context["handle"]
+    latest_move = None
     source_card = handle.get_card(source_card_id)
     placeholder_card = handle.get_card(placeholder_card_id)
-    source_actions = source_card.fetch_actions()
-    placeholder_actions = placeholder_card.fetch_actions()
-    return source_actions[0]
+    source_actions = source_card.fetch_actions(action_filter="moveCardToBoard,moveCardFromBoard")
+    if (len(source_actions) > 0):
+        latest_move = source_actions[0]
+    
+    placeholder_actions = placeholder_card.fetch_actions(action_filter="moveCardToBoard,moveCardFromBoard")
+    if (len(placeholder_actions) > 0):
+        if (latest_move == None):
+            latest_move = placeholder_actions[0]
+        else:
+            placeholder_datetime = datetime.datetime.fromisoformat(
+                placeholder_actions[0]["date"].replace("Z", "+00:00"))
+            latest_move_datetime = datetime.datetime.fromisoformat(
+                latest_move["date"].replace("Z", "+00:00"))
+            if placeholder_datetime > latest_move_datetime:
+                latest_move = placeholder_actions[0]
+    if (latest_move != None and
+        latest_move["memberCreator"]["username"] == config.automation_username):
+        return None
+    return latest_move

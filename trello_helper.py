@@ -8,5 +8,5 @@ def get_card(handle, card_id):
     return handle.get_card(card_id)
 
 
-def get_card_actions(card):
-    return card.fetch_actions()
+def get_card_actions(card, action_filter="createCard"):
+    return card.fetch_actions(action_filter=action_filter)
