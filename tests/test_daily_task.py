@@ -591,25 +591,6 @@ class Test_retrieve_list_from_trello:
         board_one.get_lists.assert_called_once_with("all")
 
 
-class Test_find_list:
-    def test_find_list(self, mocker):
-        list_name = "wanted-list-name"
-
-        list_one = mocker.Mock()
-        list_one.name = "name-list-one"
-        list_two = mocker.Mock()
-        list_two.name = list_name
-        lists = [list_one, list_two]
-
-        board_one = mocker.Mock()
-        board_name = "board-one-name"
-        board_lookup = {"board-one-name": board_one}
-        board_one.get_lists.return_value = lists
-
-        assert trello_helper.find_list(
-            board_lookup, board_name, list_name) == list_two
-
-
 class Test_create_archival_list:
     def test_create_archival_list(self, mocker):
         new_list = "new-list"

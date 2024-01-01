@@ -496,3 +496,8 @@ class Test_save_card_sync_lookup:
 
 class Test_sync_all_cards:
     pass
+
+
+class Test_find_latest_card_movement:
+    def test_return_only_latest_move(self, mocker):
+        pass
