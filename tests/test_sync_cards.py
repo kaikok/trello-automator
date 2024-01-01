@@ -15,7 +15,7 @@ class Test_perform_sync_cards:
     def test_method_will_find_and_add_new_sync_cards(self, mocker):
         last_card_sync_lookup = {}
         updated_card_sync_lookup = {}
-        mocked_daily_config = mocker.Mock()
+        mocked_config = mocker.Mock()
         context = {
             "card_sync_lookup": None}
 
@@ -30,45 +30,45 @@ class Test_perform_sync_cards:
         mocked_save_card_sync_lookup = mocker.patch(
             "sync_cards.save_card_sync_lookup")
 
-        perform_sync_cards(context, mocked_daily_config)
+        perform_sync_cards(context, mocked_config)
 
         mocked_load_card_sync_lookup.assert_called_once_with(
-            mocked_daily_config)
+            mocked_config)
 
         mocked_add_new_sync_cards.assert_called_once_with(
             context,
-            mocked_daily_config)
+            mocked_config)
 
         mocked_save_card_sync_lookup.assert_called_once_with(
             context["card_sync_lookup"],
-            mocked_daily_config)
+            mocked_config)
 
         assert context["card_sync_lookup"] == updated_card_sync_lookup
 
 
 class Test_load_card_sync_lookup:
     def test_empty_file(self, mocker):
-        mocked_daily_config = mocker.Mock()
-        mocked_daily_config.root = {
+        mocked_config = mocker.Mock()
+        mocked_config.root = {
             "tasks": {
                 "card_sync": {
                     "persistence": {
                         "json_file":
                         os.getcwd() + "/tests/empty_card_sync.json"}}}}
-        assert load_card_sync_lookup(mocked_daily_config) == {
+        assert load_card_sync_lookup(mocked_config) == {
             "source": {},
             "placeholder": {}
         }
 
     def test_file_not_found(self, mocker):
-        mocked_daily_config = mocker.Mock()
-        mocked_daily_config.root = {
+        mocked_config = mocker.Mock()
+        mocked_config.root = {
             "tasks": {
                 "card_sync": {
                     "persistence": {
                         "json_file":
                         os.getcwd() + "/tests/not_found_card_lookup.json"}}}}
-        assert load_card_sync_lookup(mocked_daily_config) == {
+        assert load_card_sync_lookup(mocked_config) == {
             "source": {},
             "placeholder": {}
         }
@@ -96,15 +96,15 @@ class Test_load_card_sync_lookup:
         fs.create_file(os.getcwd() + "/tests/card_sync.json",
                        contents=card_sync_lookup_string)
 
-        mocked_daily_config = mocker.Mock()
-        mocked_daily_config.root = {
+        mocked_config = mocker.Mock()
+        mocked_config.root = {
             "tasks": {
                 "card_sync": {
                     "persistence": {
                         "json_file":
                         os.getcwd() + "/tests/card_sync.json"}}}}
 
-        assert load_card_sync_lookup(mocked_daily_config) == card_sync_lookup
+        assert load_card_sync_lookup(mocked_config) == card_sync_lookup
 
 
 class Test_add_new_sync_cards:
@@ -126,8 +126,8 @@ class Test_add_new_sync_cards:
                 "done": "done_list_name",
             }}, indent="  "))
 
-        mocked_daily_config = mocker.Mock()
-        mocked_daily_config.root = {
+        mocked_config = mocker.Mock()
+        mocked_config.root = {
             "tasks": {
                 "card_sync": {
                     "source_boards": source_boards,
@@ -162,16 +162,16 @@ class Test_add_new_sync_cards:
         )
 
         assert add_new_sync_cards(
-            context, mocked_daily_config) == context["card_sync_lookup"]
+            context, mocked_config) == context["card_sync_lookup"]
         mocked_find_list.assert_has_calls([
             mocker.call(
                 context["board_lookup"],
                 source_boards[0]["name"],
-                mocked_daily_config.root["tasks"]["card_sync"]["source_boards"][0]["list_names"]["todo"]),
+                mocked_config.root["tasks"]["card_sync"]["source_boards"][0]["list_names"]["todo"]),
             mocker.call(
                 context["board_lookup"],
                 destination_board["name"],
-                mocked_daily_config.root["tasks"]["card_sync"]["destination_board"]["list_names"]["todo"])
+                mocked_config.root["tasks"]["card_sync"]["destination_board"]["list_names"]["todo"])
         ])
         mocked_find_new_cards.assert_called_once_with(
             context["card_sync_lookup"],
@@ -195,8 +195,8 @@ class Test_add_new_sync_cards:
                 "done": "done_list_name",
             }}, indent="  "))
 
-        mocked_daily_config = mocker.Mock()
-        mocked_daily_config.root = {
+        mocked_config = mocker.Mock()
+        mocked_config.root = {
             "tasks": {
                 "card_sync": {
                     "source_boards": source_boards,
@@ -247,7 +247,7 @@ class Test_add_new_sync_cards:
             mocked_placeholder_card_a, mocked_placeholder_card_b]
 
         context["card_sync_lookup"] = add_new_sync_cards(
-            context, mocked_daily_config)
+            context, mocked_config)
 
         assert context["card_sync_lookup"]["source"][mocked_card_a.id]["placeholder"] == mocked_placeholder_card_a.id
         assert context["card_sync_lookup"]["source"][mocked_card_b.id]["placeholder"] == mocked_placeholder_card_b.id
@@ -258,11 +258,11 @@ class Test_add_new_sync_cards:
             mocker.call(
                 context["board_lookup"],
                 source_boards[0]["name"],
-                mocked_daily_config.root["tasks"]["card_sync"]["source_boards"][0]["list_names"]["todo"]),
+                mocked_config.root["tasks"]["card_sync"]["source_boards"][0]["list_names"]["todo"]),
             mocker.call(
                 context["board_lookup"],
                 destination_board["name"],
-                mocked_daily_config.root["tasks"]["card_sync"]["destination_board"]["list_names"]["todo"])
+                mocked_config.root["tasks"]["card_sync"]["destination_board"]["list_names"]["todo"])
         ])
         mocked_find_new_cards.assert_called_once_with(
             context["card_sync_lookup"],
@@ -298,8 +298,8 @@ class Test_add_new_sync_cards:
                 "done": "done_list_name",
             }}, indent="  "))
 
-        mocked_daily_config = mocker.Mock()
-        mocked_daily_config.root = {
+        mocked_config = mocker.Mock()
+        mocked_config.root = {
             "tasks": {
                 "card_sync": {
                     "source_boards": source_boards,
@@ -357,7 +357,7 @@ class Test_add_new_sync_cards:
             mocked_placeholder_card_a, mocked_placeholder_card_b]
 
         context["card_sync_lookup"] = add_new_sync_cards(
-            context, mocked_daily_config)
+            context, mocked_config)
 
         assert context["card_sync_lookup"]["source"][mocked_card_a.id]["placeholder"] == mocked_placeholder_card_a.id
         assert context["card_sync_lookup"]["source"][mocked_card_b.id]["placeholder"] == mocked_placeholder_card_b.id
@@ -376,7 +376,7 @@ class Test_add_new_sync_cards:
             mocker.call(
                 context["board_lookup"],
                 destination_board["name"],
-                mocked_daily_config.root["tasks"]["card_sync"]["destination_board"]["list_names"]["todo"])
+                mocked_config.root["tasks"]["card_sync"]["destination_board"]["list_names"]["todo"])
         ])
         mocked_find_new_cards.assert_called_once_with(
             context["card_sync_lookup"],
@@ -474,8 +474,8 @@ class Test_add_lookup:
 
 class Test_save_card_sync_lookup:
     def test_save_card(self, mocker):
-        mocked_daily_config = mocker.Mock()
-        mocked_daily_config.root = {
+        mocked_config = mocker.Mock()
+        mocked_config.root = {
             "tasks": {
                 "card_sync": {
                     "persistence": {
@@ -486,7 +486,7 @@ class Test_save_card_sync_lookup:
         mocked_open = mocker.patch("sync_cards.open", return_value="Mock FP")
         mocked_json_dump = mocker.patch(
             "daily_run.json.dump", return_value=None)
-        save_card_sync_lookup({}, mocked_daily_config)
+        save_card_sync_lookup({}, mocked_config)
         mocked_open.assert_called_once_with(
             "cards.json", "w")
         mocked_json_dump.assert_called_once_with(
@@ -577,11 +577,11 @@ class Test_find_latest_card_movement:
             "handle": handle
         }
 
-        mocked_daily_config = mocker.Mock()
-        mocked_daily_config.automation_username = "automation"
+        mocked_config = mocker.Mock()
+        mocked_config.automation_username = "automation"
 
         assert find_latest_card_movement(
-            context, mocked_daily_config, "123", "456") == action_actual_update
+            context, mocked_config, "123", "456") == action_actual_update
 
     def test_return_latest_only_move_from_placeholder(self, mocker):
         action_older_update = {
@@ -658,11 +658,11 @@ class Test_find_latest_card_movement:
             "handle": handle
         }
 
-        mocked_daily_config = mocker.Mock()
-        mocked_daily_config.automation_username = "automation"
+        mocked_config = mocker.Mock()
+        mocked_config.automation_username = "automation"
 
         assert find_latest_card_movement(
-            context, mocked_daily_config, "123", "456") == action_newer_update
+            context, mocked_config, "123", "456") == action_newer_update
 
     def test_return_none_if_not_found(self, mocker):
         source_card_actions = []
@@ -684,11 +684,11 @@ class Test_find_latest_card_movement:
             "handle": handle
         }
 
-        mocked_daily_config = mocker.Mock()
-        mocked_daily_config.automation_username = "automation"
+        mocked_config = mocker.Mock()
+        mocked_config.automation_username = "automation"
 
         assert find_latest_card_movement(
-            context, mocked_daily_config, "123", "456") == None
+            context, mocked_config, "123", "456") == None
 
     def test_return_none_if_latest_action_is_automation(self, mocker):
         action_belongs_to_automation = {
@@ -735,8 +735,8 @@ class Test_find_latest_card_movement:
             "handle": handle
         }
 
-        mocked_daily_config = mocker.Mock()
-        mocked_daily_config.automation_username = "automation"
+        mocked_config = mocker.Mock()
+        mocked_config.automation_username = "automation"
 
         assert find_latest_card_movement(
-            context, mocked_daily_config, "123", "456") == None
+            context, mocked_config, "123", "456") == None
