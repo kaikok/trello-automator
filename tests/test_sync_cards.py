@@ -499,6 +499,9 @@ class Test_sync_all_cards:
     pass
 
 
+class Test_sync_one_card:
+    pass
+
 class Test_find_latest_card_movement:
     def test_return_latest_only_move_from_source(self, mocker):
         action_actual_update = {
@@ -552,6 +555,7 @@ class Test_find_latest_card_movement:
         }
 
         source_card_actions = [
+            action_older_update,
             action_actual_update
         ]
 
@@ -580,7 +584,7 @@ class Test_find_latest_card_movement:
             context, mocked_daily_config, "123", "456") == action_actual_update
 
     def test_return_latest_only_move_from_placeholder(self, mocker):
-        action_actual_update = {
+        action_older_update = {
             "id": "224b90",
             "data": {
             "card": {
@@ -631,7 +635,7 @@ class Test_find_latest_card_movement:
         }
 
         source_card_actions = [
-            action_actual_update
+            action_older_update
         ]
 
         source_card = mocker.Mock()
@@ -639,8 +643,10 @@ class Test_find_latest_card_movement:
         source_card.fetch_actions.return_value = source_card_actions
 
         placeholder_card_actions = [
+            action_older_update,
             action_newer_update
         ]
+
         placeholder_card = mocker.Mock()
         placeholder_card.id.side_effect = "456"
         placeholder_card.fetch_actions.return_value = placeholder_card_actions
