@@ -23,14 +23,10 @@ class Test_find_list:
 class Test_get_card:
     def test_get_card(self, mocker):
         card = mocker.Mock()
-        card.id = 123
-        board = mocker.Mock()
-        board_name = "billboard"
-        board_lookup = {
-            board_name: board
-        }
-        board.get_card.return_value = card
-        assert get_card(board_lookup, board_name, card.id) == card
+        card.id = "123"
+        handle = mocker.Mock()
+        handle.get_card.return_value = card
+        assert get_card(handle, card.id) == card
 
 
 class Test_get_card_actions:

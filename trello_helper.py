@@ -4,8 +4,8 @@ def find_list(board_lookup, board_name, list_name):
     return list_lookup.get(list_name)
 
 
-def get_card(board_lookup, board_name, card_id):
-    return board_lookup[board_name].get_card(card_id)
+def get_card(handle, card_id):
+    return handle.get_card(card_id)
 
 
 def get_card_actions(card):
