@@ -27,6 +27,7 @@ Create the .env file with the following variables
 |6|DONE_LIST_NAME|Name of the Trello list that contains done cards of the given Trello board|
 |7|ARCHIVAL_BOARD_NAME|Name of the Trello board where we want to archive cards that are done|
 |8|CONFIG_FILE|File name for JSON based configuration file.|
+|9|AUTOMATION_USERNAME|Trello member user name of the automation account.|
 
 
 ### Starting the software
