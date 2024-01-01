@@ -11,11 +11,38 @@ from sync_cards import \
 
 
 class Test_perform_sync_cards:
-    def test_method_exist(self, mocker):
-        # mocked_daily_config = mocker.Mock()
-        # context = {}
-        # perform_sync_cards(context, mocked_daily_config)
-        pass
+    def test_method_will_find_and_add_new_sync_cards(self, mocker):
+        last_card_sync_lookup = {}
+        updated_card_sync_lookup = {}
+        mocked_daily_config = mocker.Mock()
+        context = {
+            "card_sync_lookup": None}
+
+        mocked_load_card_sync_lookup = mocker.patch(
+            "sync_cards.load_card_sync_lookup",
+            return_value=last_card_sync_lookup)
+
+        mocked_add_new_sync_cards = mocker.patch(
+            "sync_cards.add_new_sync_cards",
+            return_value=updated_card_sync_lookup)
+
+        mocked_save_card_sync_lookup = mocker.patch(
+            "sync_cards.save_card_sync_lookup")
+
+        perform_sync_cards(context, mocked_daily_config)
+
+        mocked_load_card_sync_lookup.assert_called_once_with(
+            mocked_daily_config)
+
+        mocked_add_new_sync_cards.assert_called_once_with(
+            context,
+            mocked_daily_config)
+
+        mocked_save_card_sync_lookup.assert_called_once_with(
+            context["card_sync_lookup"],
+            mocked_daily_config)
+
+        assert context["card_sync_lookup"] == updated_card_sync_lookup
 
 
 class Test_load_card_sync_lookup:
