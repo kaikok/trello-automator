@@ -69,3 +69,11 @@ def add_lookup(card_sync_lookup, source_card, placeholder_card):
 def save_card_sync_lookup(card_sync_lookup, config):
     json.dump(card_sync_lookup,
               open(config.root["tasks"]["card_sync"]["persistence"]["json_file"], "w"), indent="  ")
+
+
+def find_latest_card_movement(handle, source_card_id, placeholder_card_id):
+    source_card = handle.get_card(source_card_id)
+    placeholder_card = handle.get_card(placeholder_card_id)
+    source_actions = source_card.fetch_actions()
+    placeholder_actions = placeholder_card.fetch_actions()
+    return source_actions[0]

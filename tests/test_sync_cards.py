@@ -7,7 +7,8 @@ from sync_cards import \
     find_new_cards, \
     create_placeholder_card, \
     add_lookup, \
-    save_card_sync_lookup
+    save_card_sync_lookup, \
+    find_latest_card_movement
 
 
 class Test_perform_sync_cards:
@@ -499,5 +500,47 @@ class Test_sync_all_cards:
 
 
 class Test_find_latest_card_movement:
-    def test_return_only_latest_move(self, mocker):
-        pass
+    def test_return_latest_only_move_from_source(self, mocker):
+        source_card_actions = [
+            {
+                "id": "224b90",
+                "data": {
+                "card": {
+                    "id": "6473a5",
+                },
+                "board": {
+                    "id": "8ebadb",
+                    "name": "Source Board 1",
+                },
+                "boardTarget": {
+                    "id": "0c9324"
+                },
+                "list": {
+                    "id": "abb6d6",
+                    "name": "source board in progress"
+                }
+                },
+                "type": "moveCardFromBoard",
+                "date": "2023-09-21T09:02:41.576Z",
+                "memberCreator": {
+                "username": "automation"
+                }
+            }
+        ]
+
+        source_card = mocker.Mock()
+        source_card.id.side_effect = "123"
+        source_card.fetch_actions.return_value = source_card_actions
+
+
+        placeholder_card_actions = []
+        placeholder_card = mocker.Mock()
+        placeholder_card.id.side_effect = "456"
+        placeholder_card.fetch_actions.return_value = placeholder_card_actions
+
+        handle = mocker.Mock()
+        handle.get_card.side_effect = [source_card, placeholder_card]
+
+        assert find_latest_card_movement(
+            handle, "123", "456") == source_card_actions[0]
+
