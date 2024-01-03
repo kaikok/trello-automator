@@ -17,6 +17,7 @@ def run():
 
     context["handle"] = init_trello_conn(config)
     context["board_lookup"] = setup_board_lookup(context["handle"])
+    context["list_lookup"] = setup_list_lookup(context["board_lookup"])
 
     if len(context["action_list"]) == 0:
         first_time_load(context, config)
@@ -72,6 +73,26 @@ def setup_board_lookup(handle):
     list_of_boards = handle.list_boards()
     board_lookup = {board.name: board for board in list_of_boards}
     return board_lookup
+
+
+def setup_list_lookup(board_lookup):
+    list_lookup = {
+        "board_name": {},
+        "list_id": {}
+    }
+    for board_name in board_lookup.keys():
+        board = board_lookup[board_name]
+        lists = board.get_lists("open")
+        for list in lists:
+            list_lookup["list_id"][list.id] = (list, board_name, list.name)
+            if list_lookup["board_name"].get(board_name):
+                list_lookup["board_name"][board_name][list.name] = \
+                    (list, board_name, list.name)
+            else:
+                list_lookup["board_name"][board_name] = {
+                    list.name: (list, board_name, list.name)
+                }
+    return list_lookup
 
 
 def retrieve_all_actions_from_trello(board_lookup, board_name):

@@ -77,6 +77,57 @@ class Test_setup_board_lookup:
             "board-two-name": board_two}
 
 
+class Test_setup_list_lookup:
+    def test_returns_name_and_id_lookup(self, mocker):
+        board_a_list1 = mocker.Mock()
+        board_a_list1.id = "a123_id"
+        board_a_list1.name = "a123_name"
+        board_a_list2 = mocker.Mock()
+        board_a_list2.id = "a456_id"
+        board_a_list2.name = "a456_name"
+        board_a_lists = [board_a_list1, board_a_list2]
+        board_a = mocker.Mock()
+        board_a.get_lists.return_value = board_a_lists
+        board_a.name = "board_a_name"
+
+        board_b_list1 = mocker.Mock()
+        board_b_list1.id = "b123_id"
+        board_b_list1.name = "b123_name"
+        board_b_list2 = mocker.Mock()
+        board_b_list2.id = "b456_id"
+        board_b_list2.name = "b456_name"
+        board_b_lists = [board_b_list1, board_b_list2]
+        board_b = mocker.Mock()
+        board_b.get_lists.return_value = board_b_lists
+        board_b.name = "board_b_name"
+
+        board_lookup = {
+            "board_a_name": board_a,
+            "board_b_name": board_b
+        }
+
+        expected_list_lookup = {
+            "board_name": {
+                "board_a_name": {
+                    "a123_name": (board_a_list1, board_a.name, board_a_list1.name),
+                    "a456_name": (board_a_list2, board_a.name, board_a_list2.name)
+                },
+                "board_b_name": {
+                    "b123_name": (board_b_list1, board_b.name, board_b_list1.name),
+                    "b456_name": (board_b_list2, board_b.name, board_b_list2.name)
+                }
+            },
+            "list_id": {
+                "a123_id": (board_a_list1, board_a.name, board_a_list1.name),
+                "a456_id": (board_a_list2, board_a.name, board_a_list2.name),
+                "b123_id": (board_b_list1, board_b.name, board_b_list1.name),
+                "b456_id": (board_b_list2, board_b.name, board_b_list2.name)
+            }
+        }
+
+        assert daily_run.setup_list_lookup(board_lookup) == expected_list_lookup
+
+
 class Test_retrieve_all_actions_from_trello:
     def test_less_than_1000_actions(self, mocker):
         action_list = [
@@ -466,7 +517,8 @@ class Test_run:
             "handle": handle,
             "card_json_lookup": card_json_lookup,
             "action_list": action_list,
-            "board_lookup": board_lookup
+            "board_lookup": board_lookup,
+            "list_lookup": "list_lookup"
         }
 
         mocked_create_daily_config = mocker.patch(
@@ -481,6 +533,9 @@ class Test_run:
         mocked_setup_board_lookup = mocker.patch(
             "daily_run.setup_board_lookup",
             return_value=board_lookup)
+        mocked_setup_list_lookup = mocker.patch(
+            "daily_run.setup_list_lookup",
+            return_value="list_lookup")
         mocked_first_time_load = mocker.patch(
             "daily_run.first_time_load",
             return_value=None)
@@ -500,6 +555,7 @@ class Test_run:
         mocked_load_from_local.assert_called_once_with(mocked_config)
         mocked_init_trello_conn.assert_called_once_with(mocked_config)
         mocked_setup_board_lookup.assert_called_once_with(handle)
+        mocked_setup_list_lookup.assert_called_once_with(board_lookup)
         mocked_first_time_load.assert_called_once_with(
             context,
             mocked_config)
@@ -523,7 +579,8 @@ class Test_run:
             "handle": handle,
             "action_list": action_list,
             "card_json_lookup": card_json_lookup,
-            "board_lookup": board_lookup
+            "board_lookup": board_lookup,
+            "list_lookup": "list_lookup"
         }
 
         mocked_create_daily_config = mocker.patch(
@@ -538,6 +595,9 @@ class Test_run:
         mocked_setup_board_lookup = mocker.patch(
             "daily_run.setup_board_lookup",
             return_value=board_lookup)
+        mocked_setup_list_lookup = mocker.patch(
+            "daily_run.setup_list_lookup",
+            return_value="list_lookup")
         mocked_first_time_load = mocker.patch(
             "daily_run.first_time_load",
             return_value=None)
@@ -557,6 +617,7 @@ class Test_run:
         mocked_load_from_local.assert_called_once_with(mocked_config)
         mocked_init_trello_conn.assert_called_once_with(mocked_config)
         mocked_setup_board_lookup.assert_called_once_with(handle)
+        mocked_setup_list_lookup.assert_called_once_with(board_lookup)
         mocked_update_cards_and_actions.assert_called_once_with(
             context, mocked_config)
         mocked_first_time_load.assert_not_called()
