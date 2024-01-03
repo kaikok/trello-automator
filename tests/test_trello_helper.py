@@ -1,4 +1,4 @@
-from trello_helper import get_card, get_card_actions, find_list
+from trello_helper import get_card, get_card_actions, find_list, find_list_with_id, lookup_board_with_id
 
 
 class Test_find_list:
@@ -20,6 +20,23 @@ class Test_find_list:
             board_lookup, board_name, list_name) == list_two
 
 
+class Test_find_list_with_id:
+    def test_find_list_with_id(self, mocker):
+        list_one = mocker.Mock()
+        list_one.id = "wanted-list-name"
+        list_two = mocker.Mock()
+        list_two.id = "not this one"
+        lists = [list_one, list_two]
+
+        board_one = mocker.Mock()
+        board_name = "board-one-name"
+        board_lookup = {"board-one-name": board_one}
+        board_one.get_lists.return_value = lists
+
+        assert find_list_with_id(
+            board_lookup, board_name, "wanted-list-name") == list_one
+
+
 class Test_get_card:
     def test_get_card(self, mocker):
         card = mocker.Mock()
@@ -39,5 +56,23 @@ class Test_get_card_actions:
         action_types = "action_type1,action_type2"
         assert get_card_actions(mocked_card, action_types) == actionList
         mocked_card.fetch_actions.assert_called_once_with(
-            action_filter=action_types
+            action_filter=action_types, action_limit=1000
         )
+
+
+class Test_lookup_board_with_id:
+    def test_return_board_with_matching_id(self, mocker):
+        board_one = mocker.Mock()
+        board_one.id = "123"
+        board_lookup = {
+            "board_name": board_one
+        }
+        assert lookup_board_with_id(board_lookup, "123") == board_one
+
+    def test_return_none_with_non_matching_id(self, mocker):
+        board_one = mocker.Mock()
+        board_one.id = "123"
+        board_lookup = {
+            "board_name": board_one
+        }
+        assert lookup_board_with_id(board_lookup, "456") == None

@@ -1,4 +1,4 @@
-from daily_config import Daily_config
+from config_object import Daily_config
 import os
 import json
 
@@ -6,7 +6,7 @@ import json
 class Test_config_class:
     class Test_init:
         def test_load_config_from_env_file(self, mocker):
-            mocked_load_dotenv = mocker.patch("daily_config.load_dotenv")
+            mocked_load_dotenv = mocker.patch("config_object.load_dotenv")
             os.environ["ACTIONS_FILE"] = "1"
             os.environ["CARDS_FILE"] = "2"
             os.environ["API_KEY"] = "3"
@@ -48,7 +48,7 @@ class Test_config_class:
             }
             config_string = json.dumps(config_json, indent="  ")
 
-            mocked_load_dotenv = mocker.patch("daily_config.load_dotenv")
+            mocked_load_dotenv = mocker.patch("config_object.load_dotenv")
             fs.create_file("/config.json", contents=config_string)
             os.environ["CONFIG_FILE"] = "/config.json"
 
