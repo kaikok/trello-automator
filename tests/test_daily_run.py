@@ -125,7 +125,8 @@ class Test_setup_list_lookup:
             }
         }
 
-        assert daily_run.setup_list_lookup(board_lookup) == expected_list_lookup
+        assert daily_run.setup_list_lookup(
+            board_lookup) == expected_list_lookup
 
 
 class Test_retrieve_all_actions_from_trello:

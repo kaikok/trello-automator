@@ -1,3 +1,4 @@
+import pytest
 import os
 import json
 from sync_cards import \
@@ -7,9 +8,13 @@ from sync_cards import \
     find_new_cards, \
     create_placeholder_card, \
     add_lookup, \
+    remove_card_sync, \
     save_card_sync_lookup, \
     find_latest_card_movement, \
-    get_card_status
+    get_card_status, \
+    sync_one_card, \
+    sync_all_cards, \
+    update_card_status
 
 
 class Test_perform_sync_cards:
@@ -31,6 +36,10 @@ class Test_perform_sync_cards:
         mocked_save_card_sync_lookup = mocker.patch(
             "sync_cards.save_card_sync_lookup")
 
+        mocked_sync_all_cards = mocker.patch(
+            "sync_cards.sync_all_cards",
+            return_value=updated_card_sync_lookup)
+
         perform_sync_cards(context, mocked_config)
 
         mocked_load_card_sync_lookup.assert_called_once_with(
@@ -40,8 +49,13 @@ class Test_perform_sync_cards:
             context,
             mocked_config)
 
-        mocked_save_card_sync_lookup.assert_called_once_with(
-            context["card_sync_lookup"],
+        mocked_save_card_sync_lookup.assert_has_calls([
+            mocker.call(context["card_sync_lookup"], mocked_config),
+            mocker.call(context["card_sync_lookup"], mocked_config)
+        ])
+
+        mocked_sync_all_cards.assert_called_once_with(
+            context,
             mocked_config)
 
         assert context["card_sync_lookup"] == updated_card_sync_lookup
@@ -717,89 +731,31 @@ class Test_find_latest_card_movement:
 
 
 class Test_get_card_status:
-    def test_given_source_card_determine_status(self, mocker):
+    @pytest.fixture
+    def source_board(self, mocker):
         source_board = mocker.Mock()
         source_board.id = "123"
         source_board.name = "board_a"
+        return source_board
 
-        destination_board = mocker.Mock()
-        destination_board.id = "456"
-        destination_board.name = "board_C"
-
-        source_card = mocker.Mock()
-        source_card.board_id = "123"
-        source_card.list_id = "board_a_todo_list_name"
-
-        destination_card = mocker.Mock()
-        destination_card.board_id = "456"
-        destination_card.list_id = "board_c_todo_list_name"
-
-        source_boards_config = [
-            {
-                "name": "board_a",
-                "list_names": {
-                    "todo": "board_a_todo_list_name",
-                    "in_progress": "board_a_in_progress_list_name",
-                    "done": "board_a_done_list_name",
-                },
-            }]
-
-        destination_board_config = {
-            "name": "board_c",
-            "list_names": {
-                "todo": "board_c_todo_list_name",
-                "in_progress": "board_c_in_progress_list_name",
-                "done": "board_c_done_list_name",
-            }}
-
-        context = {
-            "board_lookup": {
-                "board_a": source_board,
-                "board_c": destination_board
-            }
-        }
-
-        mocked_config = mocker.Mock()
-        mocked_config.root = {
-            "tasks": {
-                "card_sync": {
-                    "source_boards": source_boards_config,
-                    "destination_board": destination_board_config
-                }
-            }}
-
-        mocked_lookup_board_with_id = mocker.patch(
-            "sync_cards.lookup_board_with_id")
-        mocked_lookup_board_with_id.return_value = source_board
-
-        source_list = mocker.Mock()
-        source_list.name = "board_a_todo_list_name"
-        destination_list = mocker.Mock()
-        destination_list.name = "board_c_todo_list_name"
-
-        mocked_find_list = mocker.patch(
-            "sync_cards.find_list_with_id")
-        mocked_find_list.return_value = source_list
-
-        assert get_card_status(context, mocked_config, source_card) == "todo"
-
-    def test_given_destination_card_determine_status(self, mocker):
-        source_board = mocker.Mock()
-        source_board.id = "123"
-        source_board.name = "board_a"
-
+    @pytest.fixture
+    def destination_board(self, mocker):
         destination_board = mocker.Mock()
         destination_board.id = "456"
         destination_board.name = "board_c"
+        return destination_board
 
-        source_card = mocker.Mock()
-        source_card.board_id = "123"
-        source_card.list_id = "board_a_todo_list_name"
+    @pytest.fixture
+    def create_card(self, mocker):
+        def _create_card(board_id, list_id):
+            source_card = mocker.Mock()
+            source_card.board_id = board_id
+            source_card.list_id = list_id
+            return source_card
+        return _create_card
 
-        destination_card = mocker.Mock()
-        destination_card.board_id = "456"
-        destination_card.list_id = "board_c_done_list_name"
-
+    @pytest.fixture
+    def mocked_config(self, mocker):
         source_boards_config = [
             {
                 "name": "board_a",
@@ -818,12 +774,183 @@ class Test_get_card_status:
                 "done": "board_c_done_list_name",
             }}
 
-        context = {
-            "board_lookup": {
-                "board_a": source_board,
-                "board_c": destination_board
+        mocked_config = mocker.Mock()
+        mocked_config.root = {
+            "tasks": {
+                "card_sync": {
+                    "source_boards": source_boards_config,
+                    "destination_board": destination_board_config
+                }
+            }}
+        return mocked_config
+
+    @pytest.fixture
+    def create_context(self, mocker):
+        def _create_context(source_board, destination_board):
+            source_todo_list = mocker.Mock()
+            source_todo_list.id = "source_todo_list_id"
+            source_todo_list.name = "board_a_todo_list_name"
+            source_in_progress_list = mocker.Mock()
+            source_in_progress_list.id = "source_in_progress_list_id"
+            source_in_progress_list.name = "board_a_in_progress_list_name"
+            source_done_list = mocker.Mock()
+            source_done_list.id = "source_done_list_id"
+            source_done_list.name = "board_a_done_list_name"
+
+            destination_todo_list = mocker.Mock()
+            destination_todo_list.id = "destination_todo_list_id"
+            destination_todo_list.name = "board_c_todo_list_name"
+            destination_in_progress_list = mocker.Mock()
+            destination_in_progress_list.id = "destination_in_progress_list_id"
+            destination_in_progress_list.name = "board_c_in_progress_list_name"
+            destination_done_list = mocker.Mock()
+            destination_done_list.id = "destination_done_list_id"
+            destination_done_list.name = "board_c_done_list_name"
+
+            context = {
+                "board_lookup": {
+                    "board_a": source_board,
+                    "board_c": destination_board
+                },
+                "list_lookup": {
+                    "board_name": {
+                        "board_a": {
+                            source_todo_list.name: (source_todo_list, "board_a", source_todo_list.name),
+                            source_in_progress_list.name: (source_in_progress_list, "board_a", source_in_progress_list.name),
+                            source_done_list.name: (
+                                source_done_list, "board_a", source_done_list.name)
+                        },
+                        "board_c": {
+                            destination_todo_list.name: (destination_todo_list, "board_c", destination_todo_list.name),
+                            destination_in_progress_list.name: (destination_in_progress_list, "board_c", destination_in_progress_list.name),
+                            destination_done_list.name: (
+                                destination_done_list, "board_c", destination_done_list.name)
+                        }
+                    },
+                    "list_id": {
+                        source_todo_list.id: (source_todo_list, "board_a", source_todo_list.name),
+                        source_in_progress_list.id: (source_in_progress_list, "board_a", source_in_progress_list.name),
+                        source_done_list.id: (source_done_list, "board_a", source_done_list.name),
+                        destination_todo_list.id: (destination_todo_list, "board_c", destination_todo_list.name),
+                        destination_in_progress_list.id: (destination_in_progress_list, "board_c", destination_in_progress_list.name),
+                        destination_done_list.id: (destination_done_list, "board_c", destination_done_list.name),
+                    }
+                }
             }
-        }
+            return context
+        return _create_context
+
+    def test_given_source_card_determine_todo_status(self, mocker,
+                                                     source_board, destination_board,
+                                                     create_card, mocked_config, create_context):
+        source_card = create_card(source_board.id, "source_todo_list_id")
+        mocked_context = create_context(source_board, destination_board)
+
+        assert get_card_status(
+            mocked_context, mocked_config, source_card) == "todo"
+
+    def test_given_source_card_determine_done_status(self, mocker,
+                                                     source_board, destination_board,
+                                                     create_card, mocked_config, create_context):
+        source_card = create_card(source_board.id, "source_done_list_id")
+        mocked_context = create_context(source_board, destination_board)
+
+        assert get_card_status(
+            mocked_context, mocked_config, source_card) == "done"
+
+    def test_given_source_card_determine_in_progress_status(self, mocker,
+                                                            source_board, destination_board,
+                                                            create_card, mocked_config, create_context):
+        source_card = create_card(
+            source_board.id, "source_in_progress_list_id")
+        mocked_context = create_context(source_board, destination_board)
+
+        assert get_card_status(
+            mocked_context, mocked_config, source_card) == "in_progress"
+
+    def test_given_destination_card_determine_todo_status(self, mocker,
+                                                          source_board, destination_board,
+                                                          create_card, mocked_config, create_context):
+        destination_card = create_card(
+            destination_board.id, "destination_todo_list_id")
+        mocked_context = create_context(source_board, destination_board)
+
+        assert get_card_status(mocked_context, mocked_config,
+                               destination_card) == "todo"
+
+    def test_given_destination_card_determine_done_status(self, mocker,
+                                                          source_board, destination_board,
+                                                          create_card, mocked_config, create_context):
+        destination_card = create_card(
+            destination_board.id, "destination_done_list_id")
+        mocked_context = create_context(source_board, destination_board)
+
+        assert get_card_status(mocked_context, mocked_config,
+                               destination_card) == "done"
+
+    def test_given_destination_card_determine_in_progress_status(self, mocker,
+                                                                 source_board, destination_board,
+                                                                 create_card, mocked_config, create_context):
+        destination_card = create_card(
+            destination_board.id, "destination_in_progress_list_id")
+        mocked_context = create_context(source_board, destination_board)
+
+        assert get_card_status(mocked_context, mocked_config,
+                               destination_card) == "in_progress"
+
+    def test_given_destination_card_not_found(self, mocker,
+                                              source_board, destination_board,
+                                              create_card, mocked_config, create_context):
+        destination_card = create_card(destination_board.id, "other_list_id")
+        mocked_context = create_context(source_board, destination_board)
+
+        assert get_card_status(mocked_context, mocked_config,
+                               destination_card) == "not_found"
+
+
+class Test_update_card_status:
+    @pytest.fixture
+    def source_board(self, mocker):
+        source_board = mocker.Mock()
+        source_board.id = "123"
+        source_board.name = "board_a"
+        return source_board
+
+    @pytest.fixture
+    def destination_board(self, mocker):
+        destination_board = mocker.Mock()
+        destination_board.id = "456"
+        destination_board.name = "board_c"
+        return destination_board
+
+    @pytest.fixture
+    def create_card(self, mocker):
+        def _create_card(board_id, list_id):
+            source_card = mocker.Mock()
+            source_card.board_id = board_id
+            source_card.list_id = list_id
+            return source_card
+        return _create_card
+
+    @pytest.fixture
+    def mocked_config(self, mocker):
+        source_boards_config = [
+            {
+                "name": "board_a",
+                "list_names": {
+                    "todo": "board_a_todo_list_name",
+                    "in_progress": "board_a_in_progress_list_name",
+                    "done": "board_a_done_list_name",
+                },
+            }]
+
+        destination_board_config = {
+            "name": "board_c",
+            "list_names": {
+                "todo": "board_c_todo_list_name",
+                "in_progress": "board_c_in_progress_list_name",
+                "done": "board_c_done_list_name",
+            }}
 
         mocked_config = mocker.Mock()
         mocked_config.root = {
@@ -833,19 +960,520 @@ class Test_get_card_status:
                     "destination_board": destination_board_config
                 }
             }}
+        return mocked_config
+
+    @pytest.fixture
+    def create_context(self, mocker):
+        def _create_context(source_board, destination_board):
+            source_todo_list = mocker.Mock()
+            source_todo_list.id = "source_todo_list_id"
+            source_todo_list.name = "board_a_todo_list_name"
+            source_in_progress_list = mocker.Mock()
+            source_in_progress_list.id = "source_in_progress_list_id"
+            source_in_progress_list.name = "board_a_in_progress_list_name"
+            source_done_list = mocker.Mock()
+            source_done_list.id = "source_done_list_id"
+            source_done_list.name = "board_a_done_list_name"
+
+            destination_todo_list = mocker.Mock()
+            destination_todo_list.id = "destination_todo_list_id"
+            destination_todo_list.name = "board_c_todo_list_name"
+            destination_in_progress_list = mocker.Mock()
+            destination_in_progress_list.id = "destination_in_progress_list_id"
+            destination_in_progress_list.name = "board_c_in_progress_list_name"
+            destination_done_list = mocker.Mock()
+            destination_done_list.id = "destination_done_list_id"
+            destination_done_list.name = "board_c_done_list_name"
+
+            context = {
+                "board_lookup": {
+                    "board_a": source_board,
+                    "board_c": destination_board
+                },
+                "list_lookup": {
+                    "board_name": {
+                        "board_a": {
+                            source_todo_list.name: (source_todo_list, "board_a", source_todo_list.name),
+                            source_in_progress_list.name: (source_in_progress_list, "board_a", source_in_progress_list.name),
+                            source_done_list.name: (
+                                source_done_list, "board_a", source_done_list.name)
+                        },
+                        "board_c": {
+                            destination_todo_list.name: (destination_todo_list, "board_c", destination_todo_list.name),
+                            destination_in_progress_list.name: (destination_in_progress_list, "board_c", destination_in_progress_list.name),
+                            destination_done_list.name: (
+                                destination_done_list, "board_c", destination_done_list.name)
+                        }
+                    },
+                    "list_id": {
+                        source_todo_list.id: (source_todo_list, "board_a", source_todo_list.name),
+                        source_in_progress_list.id: (source_in_progress_list, "board_a", source_in_progress_list.name),
+                        source_done_list.id: (source_done_list, "board_a", source_done_list.name),
+                        destination_todo_list.id: (destination_todo_list, "board_c", destination_todo_list.name),
+                        destination_in_progress_list.id: (destination_in_progress_list, "board_c", destination_in_progress_list.name),
+                        destination_done_list.id: (destination_done_list, "board_c", destination_done_list.name),
+                    }
+                }
+            }
+            return context
+        return _create_context
+
+    def test_set_destination_card_to_new_status(self, mocker,
+                                                source_board, destination_board,
+                                                create_card, create_context,
+                                                mocked_config):
+        destination_card = create_card(
+            destination_board.id, "destination_todo_list_id")
+        mocked_context = create_context(source_board, destination_board)
 
         mocked_lookup_board_with_id = mocker.patch(
-            "sync_cards.lookup_board_with_id")
-        mocked_lookup_board_with_id.return_value = destination_board
+            "sync_cards.lookup_board_with_id", return_value=destination_board)
 
-        source_list = mocker.Mock()
-        source_list.name = "board_a_todo_list_name"
-        destination_list = mocker.Mock()
-        destination_list.name = "board_c_done_list_name"
+        destination_card.change_list.return_value = None
 
-        mocked_find_list = mocker.patch(
-            "sync_cards.find_list_with_id")
-        mocked_find_list.return_value = destination_list
+        update_card_status(mocked_context, mocked_config,
+                           destination_card, "in_progress")
 
-        assert get_card_status(context, mocked_config,
-                               destination_card) == "done"
+        mocked_lookup_board_with_id.assert_called_with(
+            mocked_context["board_lookup"], destination_card.board_id)
+
+        destination_card.change_list.assert_called_with(
+            "destination_in_progress_list_id")
+
+    def test_set_source_card_to_new_status(self, mocker,
+                                           source_board, destination_board,
+                                           create_card, create_context,
+                                           mocked_config):
+        source_card = create_card(source_board.id, "source_todo_list_id")
+        mocked_context = create_context(source_board, destination_board)
+
+        mocked_lookup_board_with_id = mocker.patch(
+            "sync_cards.lookup_board_with_id", return_value=source_board)
+
+        source_card.change_list.return_value = None
+
+        update_card_status(mocked_context, mocked_config,
+                           source_card, "in_progress")
+
+        mocked_lookup_board_with_id.assert_called_with(
+            mocked_context["board_lookup"], source_card.board_id)
+
+        source_card.change_list.assert_called_with(
+            "source_in_progress_list_id")
+
+
+class Test_remove_card_sync:
+    def test_remove_both_source_and_placeholder_entries_from_lookup_given_source_card(self, mocker):
+        initial_card_sync_lookup = {
+            "source": {
+                "source_card_id_123": {
+                    "placeholder": "placeholder_card_id_123"
+                },
+                "source_card_id_456": {
+                    "placeholder": "placeholder_card_id_456"
+                }
+            },
+            "placeholder": {
+                "placeholder_card_id_123": {
+                    "source": "source_card_id_123"
+                },
+                "placeholder_card_id_456": {
+                    "source": "source_card_id_456"
+                }
+            }
+        }
+
+        final_card_sync_lookup = {
+            "source": {
+                "source_card_id_456": {
+                    "placeholder": "placeholder_card_id_456"
+                }
+            },
+            "placeholder": {
+                "placeholder_card_id_456": {
+                    "source": "source_card_id_456"
+                }
+            }
+        }
+
+        mocked_context = {
+            "card_sync_lookup": initial_card_sync_lookup
+        }
+
+        source_card = mocker.Mock()
+        source_card.id = "source_card_id_123"
+
+        assert remove_card_sync(
+            mocked_context, source_card) == final_card_sync_lookup
+
+    def test_remove_both_source_and_placeholder_entries_from_lookup_given_placeholder_card(self, mocker):
+        initial_card_sync_lookup = {
+            "source": {
+                "source_card_id_123": {
+                    "placeholder": "placeholder_card_id_123"
+                },
+                "source_card_id_456": {
+                    "placeholder": "placeholder_card_id_456"
+                }
+            },
+            "placeholder": {
+                "placeholder_card_id_123": {
+                    "source": "source_card_id_123"
+                },
+                "placeholder_card_id_456": {
+                    "source": "source_card_id_456"
+                }
+            }
+        }
+
+        final_card_sync_lookup = {
+            "source": {
+                "source_card_id_123": {
+                    "placeholder": "placeholder_card_id_123"
+                }
+            },
+            "placeholder": {
+                "placeholder_card_id_123": {
+                    "source": "source_card_id_123"
+                }
+            }
+        }
+
+        mocked_context = {
+            "card_sync_lookup": initial_card_sync_lookup
+        }
+
+        placeholder_card = mocker.Mock()
+        placeholder_card.id = "placeholder_card_id_456"
+
+        assert remove_card_sync(
+            mocked_context, placeholder_card) == final_card_sync_lookup
+
+
+class Test_sync_one_card:
+    @pytest.fixture
+    def source_board(self, mocker):
+        source_board = mocker.Mock()
+        source_board.id = "123"
+        source_board.name = "board_a"
+        return source_board
+
+    @pytest.fixture
+    def destination_board(self, mocker):
+        destination_board = mocker.Mock()
+        destination_board.id = "456"
+        destination_board.name = "board_c"
+        return destination_board
+
+    @pytest.fixture
+    def create_card(self, mocker):
+        def _create_card(board_id, list_id):
+            source_card = mocker.Mock()
+            source_card.board_id = board_id
+            source_card.list_id = list_id
+            return source_card
+        return _create_card
+
+    def test_returns_none_if_status_is_same(self, mocker,
+                                            source_board, destination_board,
+                                            create_card):
+        source_card = create_card(source_board.id, "source_todo_list_id")
+        placeholder_card = create_card(
+            destination_board.id, "destination_todo_list_id")
+
+        latest_card_movement = {
+            "id": "123",
+            "data": {
+                "card": {
+                    "name": source_card.name,
+                    "id": source_card.id
+                },
+                "board": {
+                    "name": ""
+                },
+                "listBefore": {
+                    "name": ""
+                },
+                "listAfter": {
+                    "name": ""
+                }
+            }
+        }
+
+        mocked_handle = mocker.Mock()
+        mocked_handle.get_card.side_effect = [
+            source_card, placeholder_card
+        ]
+
+        mocked_get_card_status = mocker.patch(
+            "sync_cards.get_card_status", side_effect=["todo", "todo"]
+        )
+
+        mocked_find_latest_card_movement = mocker.patch(
+            "sync_cards.find_latest_card_movement", return_value=latest_card_movement
+        )
+
+        mocked_context = {
+            "handle": mocked_handle
+        }
+
+        mocked_config = mocker.Mock()
+
+        assert sync_one_card(mocked_context, mocked_config,
+                             source_card.id, placeholder_card.id) == None
+
+        mocked_handle.get_card.assert_has_calls([
+            mocker.call(source_card.id),
+            mocker.call(placeholder_card.id)
+        ])
+
+        mocked_get_card_status.assert_has_calls([
+            mocker.call(mocked_context, mocked_config, source_card),
+            mocker.call(mocked_context, mocked_config, placeholder_card)
+        ])
+
+        mocked_find_latest_card_movement.assert_called_with(
+            mocked_config, source_card, placeholder_card
+        )
+
+    def test_returns_job_when_status_is_different_and_last_move_was_source(self, mocker,
+                                                                           source_board, destination_board,
+                                                                           create_card):
+        source_card = create_card(source_board.id, "source_todo_list_id")
+        placeholder_card = create_card(
+            destination_board.id, "destination_todo_list_id")
+
+        latest_card_movement = {
+            "id": "123",
+            "data": {
+                "card": {
+                    "name": source_card.name,
+                    "id": source_card.id
+                },
+                "board": {
+                    "name": ""
+                },
+                "listBefore": {
+                    "name": ""
+                },
+                "listAfter": {
+                    "name": ""
+                }
+            }
+        }
+
+        mocked_handle = mocker.Mock()
+        mocked_handle.get_card.side_effect = [
+            source_card, placeholder_card
+        ]
+
+        mocked_get_card_status = mocker.patch(
+            "sync_cards.get_card_status", side_effect=["todo", "in_progress"]
+        )
+
+        mocked_find_latest_card_movement = mocker.patch(
+            "sync_cards.find_latest_card_movement", return_value=latest_card_movement
+        )
+
+        mocked_context = {
+            "handle": mocked_handle
+        }
+
+        mocked_config = mocker.Mock()
+
+        assert sync_one_card(mocked_context, mocked_config, source_card.id,
+                             placeholder_card.id) == (placeholder_card, "todo")
+
+        mocked_handle.get_card.assert_has_calls([
+            mocker.call(source_card.id),
+            mocker.call(placeholder_card.id)
+        ])
+
+        mocked_get_card_status.assert_has_calls([
+            mocker.call(mocked_context, mocked_config, source_card),
+            mocker.call(mocked_context, mocked_config, placeholder_card)
+        ])
+
+        mocked_find_latest_card_movement.assert_called_with(
+            mocked_config, source_card, placeholder_card
+        )
+
+    def test_returns_job_when_status_is_different_and_last_move_was_placeholder(self, mocker,
+                                                                                source_board, destination_board,
+                                                                                create_card):
+        source_card = create_card(source_board.id, "source_todo_list_id")
+        placeholder_card = create_card(
+            destination_board.id, "destination_todo_list_id")
+
+        latest_card_movement = {
+            "id": "123",
+            "data": {
+                "card": {
+                    "name": placeholder_card.name,
+                    "id": placeholder_card.id
+                },
+                "board": {
+                    "name": ""
+                },
+                "listBefore": {
+                    "name": ""
+                },
+                "listAfter": {
+                    "name": ""
+                }
+            }
+        }
+
+        mocked_handle = mocker.Mock()
+        mocked_handle.get_card.side_effect = [
+            source_card, placeholder_card
+        ]
+
+        mocked_get_card_status = mocker.patch(
+            "sync_cards.get_card_status", side_effect=["todo", "in_progress"]
+        )
+
+        mocked_find_latest_card_movement = mocker.patch(
+            "sync_cards.find_latest_card_movement", return_value=latest_card_movement
+        )
+
+        mocked_context = {
+            "handle": mocked_handle
+        }
+
+        mocked_config = mocker.Mock()
+
+        assert sync_one_card(mocked_context, mocked_config, source_card.id,
+                             placeholder_card.id) == (source_card, "in_progress")
+
+        mocked_handle.get_card.assert_has_calls([
+            mocker.call(source_card.id),
+            mocker.call(placeholder_card.id)
+        ])
+
+        mocked_get_card_status.assert_has_calls([
+            mocker.call(mocked_context, mocked_config, source_card),
+            mocker.call(mocked_context, mocked_config, placeholder_card)
+        ])
+
+        mocked_find_latest_card_movement.assert_called_with(
+            mocked_config, source_card, placeholder_card
+        )
+
+    def test_throw_exception_if_movement_not_found(self, mocker,
+                                                   source_board, destination_board,
+                                                   create_card):
+        source_card = create_card(source_board.id, "source_todo_list_id")
+        placeholder_card = create_card(
+            destination_board.id, "destination_todo_list_id")
+
+        latest_card_movement = None
+
+        mocked_handle = mocker.Mock()
+        mocked_handle.get_card.side_effect = [
+            source_card, placeholder_card
+        ]
+
+        mocked_get_card_status = mocker.patch(
+            "sync_cards.get_card_status", side_effect=["todo", "in_progress"]
+        )
+
+        mocked_find_latest_card_movement = mocker.patch(
+            "sync_cards.find_latest_card_movement", return_value=latest_card_movement
+        )
+
+        mocked_context = {
+            "handle": mocked_handle
+        }
+
+        mocked_config = mocker.Mock()
+
+        with pytest.raises(Exception) as excinfo:
+            sync_one_card(mocked_context, mocked_config,
+                          source_card.id, placeholder_card.id)
+
+        assert str(excinfo.value) == "Movement action not found!"
+
+        mocked_handle.get_card.assert_has_calls([
+            mocker.call(source_card.id),
+            mocker.call(placeholder_card.id)
+        ])
+
+        mocked_get_card_status.assert_has_calls([
+            mocker.call(mocked_context, mocked_config, source_card),
+            mocker.call(mocked_context, mocked_config, placeholder_card)
+        ])
+
+        mocked_find_latest_card_movement.assert_called_with(
+            mocked_config, source_card, placeholder_card
+        )
+
+
+class Test_sync_all_cards:
+    def test_processing_jobs(self, mocker):
+        card_sync_lookup = {
+            "source": {
+                "source_card_id_123": {
+                    "placeholder": "placeholder_card_id_123"
+                },
+                "source_card_id_456": {
+                    "placeholder": "placeholder_card_id_456"
+                },
+                "source_card_id_789": {
+                    "placeholder": "placeholder_card_id_789"
+                }
+            },
+            "placeholder": {
+                "placeholder_card_id_123": {
+                    "source": "source_card_id_123"
+                },
+                "placeholder_card_id_456": {
+                    "source": "source_card_id_456"
+                },
+                "placeholder_card_id_789": {
+                    "source": "source_card_id_789"
+                }
+            }
+        }
+
+        mocked_context = {
+            "card_sync_lookup": card_sync_lookup
+        }
+
+        mocked_config = mocker.Mock()
+
+        card1 = mocker.Mock()
+        card1.name = "card1"
+
+        card2 = mocker.Mock()
+        card2.name = "card2"
+
+        card3 = mocker.Mock()
+        card3.name = "card2"
+
+        mocked_sync_one_card = mocker.patch(
+            "sync_cards.sync_one_card", side_effect=[(card1, "todo"), (card2, "in_progress"), (card3, "not_found")]
+        )
+
+        mocked_update_card_status = mocker.patch(
+            "sync_cards.update_card_status")
+
+        mocked_remove_card_sync = mocker.patch(
+            "sync_cards.remove_card_sync", return_value=card_sync_lookup)
+
+        assert sync_all_cards(
+            mocked_context, mocked_config) == card_sync_lookup
+
+        mocked_sync_one_card.assert_has_calls([
+            mocker.call(mocked_context, mocked_config,
+                        "source_card_id_123", "placeholder_card_id_123"),
+            mocker.call(mocked_context, mocked_config,
+                        "source_card_id_456", "placeholder_card_id_456")
+        ])
+
+        mocked_update_card_status.assert_has_calls([
+            mocker.call(mocked_context, mocked_config, card1, "todo"),
+            mocker.call(mocked_context, mocked_config, card2, "in_progress")
+        ])
+
+        mocked_remove_card_sync.assert_called_with(mocked_context, card3)

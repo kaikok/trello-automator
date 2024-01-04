@@ -1,6 +1,6 @@
 import json
 import datetime
-from trello_helper import change_card_list, find_list, lookup_board_with_id, find_list_with_id
+from trello_helper import find_list, lookup_board_with_id
 
 
 def perform_sync_cards(context, config):
@@ -8,7 +8,8 @@ def perform_sync_cards(context, config):
         load_card_sync_lookup(config)
     context["card_sync_lookup"] = add_new_sync_cards(context, config)
     save_card_sync_lookup(context["card_sync_lookup"], config)
-    # sync_all_cards(context, config)
+    context["card_sync_lookup"] = sync_all_cards(context, config)
+    save_card_sync_lookup(context["card_sync_lookup"], config)
 
 
 def load_card_sync_lookup(config):
@@ -83,9 +84,13 @@ def sync_all_cards(context, config):
         if (job != None):
             jobs.append(job)
     for job in jobs:
-        (card, list_id) = job
-        print(f'Executing move card "{card.name}" to list "{list_id}"')
-        change_card_list(card, list_id)
+        (card, new_status) = job
+        if (new_status == "not_found"):
+            context["card_sync_lookup"] = remove_card_sync(context, card)
+            continue
+        print(f'Executing update card "{card.name}" to "{new_status}"')
+        update_card_status(context, config, card, new_status)
+    return context["card_sync_lookup"]
 
 
 def sync_one_card(context, config, source_card_id, placeholder_card_id):
@@ -111,66 +116,82 @@ def sync_one_card(context, config, source_card_id, placeholder_card_id):
         print(latest_movement["data"]["listAfter"]["name"])
         print(latest_movement)
 
-        before_list_id = latest_movement["data"]["listBefore"]["id"]
-        before_list_name = latest_movement["data"]["listBefore"]["name"]
-        after_list_id = latest_movement["data"]["listAfter"]["id"]
-        after_list_name = latest_movement["data"]["listAfter"]["name"]
-
         if (latest_movement["data"]["card"]["id"] == source_card.id):
             print(
-                f'Add job move placeholder from "{before_list_name}" {before_list_id} to "{after_list_name}" {after_list_id}')
-            return (placeholder_card, after_list_id)
+                f'Add job move placeholder from "{placeholder_status}" to "{source_status}')
+            return (placeholder_card, source_status)
         else:
             print(
-                f'Add job move source from "{before_list_name}" {before_list_id} to "{after_list_name}" {after_list_id}')
-            return (source_card, after_list_id)
+                f'Add job move source from "{source_status}" to "{placeholder_status}"')
+            return (source_card, placeholder_status)
     return None
 
 
 def get_card_status(context, config, card):
-    board_id = card.board_id
-    board_lookup = context["board_lookup"]
-    board = lookup_board_with_id(board_lookup, board_id)
     list_id = card.list_id
-    list = find_list_with_id(board_lookup, board.name, list_id)
+    list_lookup_entry = context["list_lookup"]["list_id"].get(list_id)
+    if (list_lookup_entry == None):
+        return "not_found"
+    (_list, list_board_name, list_name) = list_lookup_entry
+
+    destination_board_config = config.root["tasks"]["card_sync"]["destination_board"]
+    source_board_config_list = config.root["tasks"]["card_sync"]["source_boards"]
+
+    if (destination_board_config["name"] == list_board_name):
+        todo_list_name = destination_board_config["list_names"]["todo"]
+        in_progress_list_name = destination_board_config["list_names"]["in_progress"]
+        done_list_name = destination_board_config["list_names"]["done"]
+        if (list_name == todo_list_name):
+            return "todo"
+        if (list_name == in_progress_list_name):
+            return "in_progress"
+        if (list_name == done_list_name):
+            return "done"
+    else:
+        for source_board_config in source_board_config_list:
+            if (source_board_config["name"] == list_board_name):
+                todo_list_name = source_board_config["list_names"]["todo"]
+                in_progress_list_name = source_board_config["list_names"]["in_progress"]
+                done_list_name = source_board_config["list_names"]["done"]
+                if (list_name == todo_list_name):
+                    return "todo"
+                if (list_name == in_progress_list_name):
+                    return "in_progress"
+                if (list_name == done_list_name):
+                    return "done"
+
+
+def update_card_status(context, config, card, new_status):
+    list_lookup = context["list_lookup"]
+    board_lookup = context["board_lookup"]
+    board = lookup_board_with_id(board_lookup, card.board_id)
 
     destination_board_config = config.root["tasks"]["card_sync"]["destination_board"]
     source_board_config_list = config.root["tasks"]["card_sync"]["source_boards"]
 
     if (destination_board_config["name"] == board.name):
-        todo_list_name = destination_board_config["list_names"]["todo"]
-        in_progress_list_name = destination_board_config["list_names"]["in_progress"]
-        done_list_name = destination_board_config["list_names"]["done"]
-        if (list.name == todo_list_name):
-            return "todo"
-        if (list.name == in_progress_list_name):
-            return "in_progress"
-        if (list.name == done_list_name):
-            return "done"
+        list_name = destination_board_config["list_names"][new_status]
     else:
         for source_board_config in source_board_config_list:
             if (source_board_config["name"] == board.name):
-                todo_list_name = source_board_config["list_names"]["todo"]
-                in_progress_list_name = source_board_config["list_names"]["in_progress"]
-                done_list_name = source_board_config["list_names"]["done"]
-                if (list.name == todo_list_name):
-                    return "todo"
-                if (list.name == in_progress_list_name):
-                    return "in_progress"
-                if (list.name == done_list_name):
-                    return "done"
-    return "not_found"
+                list_name = source_board_config["list_names"][new_status]
+
+    (list, _list_board_name,
+     _list_name) = list_lookup["board_name"][board.name][list_name]
+    card.change_list(list.id)
 
 
-def get_list_id_for_new_status(context, config, board_id, new_status):
-    board_lookup = context["board_lookup"]
-    board = lookup_board_with_id(board_lookup, board_id)
-    destination_board_config = config.root["tasks"]["card_sync"]["destination_board"]
-    source_board_config_list = config.root["tasks"]["card_sync"]["source_boards"]
-    # list_name = None
-    # if (destination_board_config["name"] == board.name):
-    #     list_name = destination_board_config[]
-    # else:
+def remove_card_sync(context, card):
+    card_sync_lookup = context["card_sync_lookup"]
+    if card_sync_lookup["source"].get(card.id):
+        placeholder_card_id = card_sync_lookup["source"][card.id]["placeholder"]
+        card_sync_lookup["source"].pop(card.id, None)
+        card_sync_lookup["placeholder"].pop(placeholder_card_id, None)
+    if card_sync_lookup["placeholder"].get(card.id):
+        source_card_id = card_sync_lookup["placeholder"][card.id]["source"]
+        card_sync_lookup["source"].pop(source_card_id, None)
+        card_sync_lookup["placeholder"].pop(card.id, None)
+    return card_sync_lookup
 
 
 def find_latest_card_movement(config, source_card, placeholder_card):

@@ -1,4 +1,4 @@
-from trello_helper import get_card, get_card_actions, find_list, find_list_with_id, lookup_board_with_id
+from trello_helper import get_card, get_card_actions, find_list, lookup_board_with_id
 
 
 class Test_find_list:
@@ -18,23 +18,6 @@ class Test_find_list:
 
         assert find_list(
             board_lookup, board_name, list_name) == list_two
-
-
-class Test_find_list_with_id:
-    def test_find_list_with_id(self, mocker):
-        list_one = mocker.Mock()
-        list_one.id = "wanted-list-name"
-        list_two = mocker.Mock()
-        list_two.id = "not this one"
-        lists = [list_one, list_two]
-
-        board_one = mocker.Mock()
-        board_name = "board-one-name"
-        board_lookup = {"board-one-name": board_one}
-        board_one.get_lists.return_value = lists
-
-        assert find_list_with_id(
-            board_lookup, board_name, "wanted-list-name") == list_one
 
 
 class Test_get_card:

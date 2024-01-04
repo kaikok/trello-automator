@@ -24,7 +24,3 @@ def lookup_board_with_id(board_lookup, board_id):
         if (board.id == board_id):
             return board
     return None
-
-
-def change_card_list(card, list_id):
-    card.change_list(list_id)

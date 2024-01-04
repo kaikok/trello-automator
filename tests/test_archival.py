@@ -239,6 +239,27 @@ class Test_get_move_to_done_list_date:
                       "date": move_date}]}
         assert archival.get_move_to_done_list_date(
             card_action_list_lookup, card_id, done_list_id) == move_date
+        
+    def test_date_found_for_moveCardToBoard_type(self, mocker):
+        card_id = "card-id-123"
+        done_list_id = "done-list-id-456"
+        move_date = "move-date"
+        other_date = "other-date"
+        card_action_list_lookup = {
+            card_id: [{
+                "type": "updateCard",
+                "data": {
+                    "listAfter": {
+                        "id": "not-this-list"}},
+                      "date": other_date},
+                      {
+                "type": "moveCardToBoard",
+                "data": {
+                    "list": {
+                        "id": done_list_id}},
+                      "date": move_date}]}
+        assert archival.get_move_to_done_list_date(
+            card_action_list_lookup, card_id, done_list_id) == move_date
 
     def test_date_not_found(self, mocker):
         card_id = "card-id-123"
