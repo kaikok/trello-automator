@@ -33,7 +33,7 @@ Create the .env file with the following variables
 ### Starting the software
 
 ```
-python3 daily_run.py
+python3 ./src/daily_run.py
 ```
 
 ## User Documentation
@@ -137,5 +137,5 @@ pytest --cov=.
 With html visual report
 
 ```bash
-pytest --cov-report html --cov=.
+pytest --cov-report html --cov=./src
 ```

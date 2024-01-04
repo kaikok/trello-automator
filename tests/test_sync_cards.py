@@ -500,7 +500,7 @@ class Test_save_card_sync_lookup:
             }}
         mocked_open = mocker.patch("sync_cards.open", return_value="Mock FP")
         mocked_json_dump = mocker.patch(
-            "daily_run.json.dump", return_value=None)
+            "sync_cards.json.dump", return_value=None)
         save_card_sync_lookup({}, mocked_config)
         mocked_open.assert_called_once_with(
             "cards.json", "w")
