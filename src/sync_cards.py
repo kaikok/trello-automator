@@ -42,6 +42,7 @@ def add_new_sync_cards(context, config):
 
     new_cards = find_new_cards(context['card_sync_lookup'], source_cards)
     for new_card in new_cards:
+        print(f"Creating placeholder for {new_card.id}, \"{new_card.name}\"")
         placeholder_card = create_placeholder_card(new_card, placeholder_list)
         context['card_sync_lookup'] = add_lookup(
             context['card_sync_lookup'], new_card, placeholder_card)
@@ -159,6 +160,7 @@ def get_card_status(context, config, card):
                     return "in_progress"
                 if (list_name == done_list_name):
                     return "done"
+    return "not_found"
 
 
 def update_card_status(context, config, card, new_status):

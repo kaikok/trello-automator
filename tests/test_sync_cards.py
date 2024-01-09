@@ -807,6 +807,10 @@ class Test_get_card_status:
             destination_done_list.id = "destination_done_list_id"
             destination_done_list.name = "board_c_done_list_name"
 
+            unrelated_list = mocker.Mock()
+            unrelated_list.id = "unrelated_list_id"
+            unrelated_list.name = "board_c_unrelated_list_name"
+
             context = {
                 "board_lookup": {
                     "board_a": source_board,
@@ -824,7 +828,8 @@ class Test_get_card_status:
                             destination_todo_list.name: (destination_todo_list, "board_c", destination_todo_list.name),
                             destination_in_progress_list.name: (destination_in_progress_list, "board_c", destination_in_progress_list.name),
                             destination_done_list.name: (
-                                destination_done_list, "board_c", destination_done_list.name)
+                                destination_done_list, "board_c", destination_done_list.name),
+                            unrelated_list.name: (unrelated_list, "board_c", unrelated_list.name)
                         }
                     },
                     "list_id": {
@@ -834,6 +839,7 @@ class Test_get_card_status:
                         destination_todo_list.id: (destination_todo_list, "board_c", destination_todo_list.name),
                         destination_in_progress_list.id: (destination_in_progress_list, "board_c", destination_in_progress_list.name),
                         destination_done_list.id: (destination_done_list, "board_c", destination_done_list.name),
+                        unrelated_list.id: (unrelated_list, "board_c", unrelated_list.name)
                     }
                 }
             }
@@ -902,6 +908,15 @@ class Test_get_card_status:
                                               source_board, destination_board,
                                               create_card, mocked_config, create_context):
         destination_card = create_card(destination_board.id, "other_list_id")
+        mocked_context = create_context(source_board, destination_board)
+
+        assert get_card_status(mocked_context, mocked_config,
+                               destination_card) == "not_found"
+
+    def test_destination_card_belongs_to_unrelated_list_return_not_found(self, mocker,
+                                              source_board, destination_board,
+                                              create_card, mocked_config, create_context):
+        destination_card = create_card(destination_board.id, "unrelated_list_id")
         mocked_context = create_context(source_board, destination_board)
 
         assert get_card_status(mocked_context, mocked_config,
