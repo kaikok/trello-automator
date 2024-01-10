@@ -139,3 +139,9 @@ With html visual report
 ```bash
 pytest --cov-report html --cov=./src
 ```
+
+Configure extra paths to resolve intellisense import issue for test code after moving code into src directory with "/src".
+
+```
+@id:python.analysis.extraPaths
+```
