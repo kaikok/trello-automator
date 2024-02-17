@@ -390,7 +390,9 @@ class Test_get_card_ids_from_action_list:
                 "id": 123,
                 "data": {
                     "card": {
-                        "id": "abc"}}},
+                        "id": "abc-id",
+                        "name": "abc-name",
+                        "shortLink": "https://abc.com"}}},
             {
                 "id": 456,
                 "data": {}},
@@ -398,8 +400,12 @@ class Test_get_card_ids_from_action_list:
                 "id": 789,
                 "data": {
                     "card": {
-                        "id": "def"}}}]
-        expected_card_list = ["abc", "def"]
+                        "id": "def-id",
+                        "name": "def-name",
+                        "shortLink": "https://def.com"}}}]
+        expected_card_list = [
+            ("abc-id", "abc-name", "https://abc.com"), 
+            ("def-id", "def-name", "https://def.com")]
 
         assert daily_run.get_card_ids_from_action_list(
             action_list) == expected_card_list
@@ -409,7 +415,10 @@ class Test_update_card_json_lookup:
     def test_update_card_json_lookup(self, mocker):
         handle = mocker.Mock()
 
-        updated_card_ids = ["xyz", "opq", "abc"]
+        updated_card_entries = [
+            ("xyz", "xyz-name", "xyz-link"),
+            ("opq", "opq-name", "opq-link"),
+            ("abc", "abc-name", "abc-link")]
         new_action_list = "new_action_list"
         card_json_lookup = {"abc": {"id": "abc"}, "def": {"id": "def"}}
         expected_card_json_lookup = {
@@ -419,7 +428,7 @@ class Test_update_card_json_lookup:
             "opq": {"id": "opq"}}
         mocked_get_card_ids_from_action_list = mocker.patch(
             "daily_run.get_card_ids_from_action_list",
-            return_value=updated_card_ids)
+            return_value=updated_card_entries)
 
         card_one = mocker.Mock()
         card_one._json_obj = {"id": "xyz"}
@@ -432,6 +441,7 @@ class Test_update_card_json_lookup:
         mocked_tqdm = mocker.patch(
             "daily_run.tqdm",
             return_value=progress_bar)
+        mocked_tqdm.set_description.return_value = None
 
         handle.get_card.side_effect = [card_one, card_two, card_three]
 
@@ -441,8 +451,10 @@ class Test_update_card_json_lookup:
         mocked_get_card_ids_from_action_list.assert_called_once_with(
             new_action_list)
         mocked_tqdm.assert_called()
-        assert handle.mock_calls == [mocker.call.get_card(
-            'xyz'), mocker.call.get_card('opq'), mocker.call.get_card('abc')]
+        assert handle.mock_calls == [
+            mocker.call.get_card('xyz'),
+            mocker.call.get_card('opq'),
+            mocker.call.get_card('abc')]
         assert results == expected_card_json_lookup
 
 

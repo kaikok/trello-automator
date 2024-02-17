@@ -104,27 +104,38 @@ def sync_one_card(context, config, source_card_id, placeholder_card_id):
         config, source_card, placeholder_card)
 
     if (source_status != placeholder_status):
-        if (latest_movement == None):
-            raise Exception("Movement action not found!")
-
-        print("---")
-        print(f"Source: {source_status}")
-        print(f"Placeholder: {placeholder_status}")
-        print(latest_movement["id"])
-        print(latest_movement["data"]["card"]["name"])
-        print(latest_movement["data"]["board"]["name"])
-        print(latest_movement["data"]["listBefore"]["name"])
-        print(latest_movement["data"]["listAfter"]["name"])
-        print(latest_movement)
-
-        if (latest_movement["data"]["card"]["id"] == source_card.id):
+        if placeholder_status == "not_found":
             print(
-                f'Add job move placeholder from "{placeholder_status}" to "{source_status}')
-            return (placeholder_card, source_status)
-        else:
-            print(
-                f'Add job move source from "{source_status}" to "{placeholder_status}"')
+                f'Add job move placeholder from "{source_status}" to "{placeholder_status}')
             return (source_card, placeholder_status)
+        else:
+            if (latest_movement is None):
+                print(
+                    "Movement not found for\n" +
+                    f'"{source_card.name}" on {source_card.list_id}, ' +
+                    f'status {source_status}' + "\n" +
+                    f'"{placeholder_card.name}" ' +
+                    f'on {placeholder_card.list_id}, status {placeholder_status}')
+                raise Exception("Movement action not found!")
+
+            print("---")
+            print(f"Source: {source_status}")
+            print(f"Placeholder: {placeholder_status}")
+            print(latest_movement["id"])
+            print(latest_movement["data"]["card"]["name"])
+            print(latest_movement["data"]["board"]["name"])
+            print(latest_movement["data"]["listBefore"]["name"])
+            print(latest_movement["data"]["listAfter"]["name"])
+            print(latest_movement)
+
+            if (latest_movement["data"]["card"]["id"] == source_card.id):
+                print(
+                    f'Add job move placeholder from "{placeholder_status}" to "{source_status}')
+                return (placeholder_card, source_status)
+            else:
+                print(
+                    f'Add job move source from "{source_status}" to "{placeholder_status}"')
+                return (source_card, placeholder_status)
     return None
 
 

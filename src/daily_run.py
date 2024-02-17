@@ -197,11 +197,13 @@ def retrieve_latest_actions_from_trello(board_lookup,
 
 def update_card_json_lookup(
         handle, card_json_lookup, new_action_list):
-    updated_card_ids = get_card_ids_from_action_list(new_action_list)
-    total_cards = len(updated_card_ids)
+    updated_card_entries = get_card_ids_from_action_list(new_action_list)
+    total_cards = len(updated_card_entries)
     print(f'{total_cards} Cards need to be checked for update')
     progress_bar = tqdm(total=total_cards)
-    for updated_card_id in updated_card_ids:
+    for updated_card_entry in updated_card_entries:
+        (updated_card_id, updated_card_name, updated_card_link) = updated_card_entry
+        progress_bar.set_description(f"Processing {updated_card_id} {updated_card_link} {updated_card_name}")
         updated_card = handle.get_card(updated_card_id)
         card_json_lookup[updated_card_id] = updated_card._json_obj
         time.sleep(1)
@@ -214,7 +216,10 @@ def get_card_ids_from_action_list(action_list):
     card_ids = []
     for action in action_list:
         if action["data"].get("card"):
-            card_ids.append(action["data"]["card"]["id"])
+            card_ids.append(
+                (action["data"]["card"]["id"],
+                 action["data"]["card"]["name"],
+                 action["data"]["card"]["shortLink"]))
     return card_ids
 
 
