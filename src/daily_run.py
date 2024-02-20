@@ -1,5 +1,6 @@
-import os
+import traceback
 import json
+import trello
 from trello import TrelloClient
 from dotenv import load_dotenv
 import time
@@ -204,8 +205,12 @@ def update_card_json_lookup(
     for updated_card_entry in updated_card_entries:
         (updated_card_id, updated_card_name, updated_card_link) = updated_card_entry
         progress_bar.set_description(f"Processing {updated_card_id} {updated_card_link} {updated_card_name}")
-        updated_card = handle.get_card(updated_card_id)
-        card_json_lookup[updated_card_id] = updated_card._json_obj
+        try:
+            updated_card = handle.get_card(updated_card_id)
+            card_json_lookup[updated_card_id] = updated_card._json_obj
+        except (trello.ResourceUnavailable):
+            print(f"Error getting {updated_card_id} {trello.ResourceUnavailable}")
+            print(traceback.format_exc())
         time.sleep(1)
         progress_bar.update(1)
     progress_bar.close()

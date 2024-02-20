@@ -1,4 +1,5 @@
 import os
+import pytest
 import trello
 import daily_run
 
@@ -531,6 +532,40 @@ class Test_update_card_json_lookup:
             mocker.call.get_card('abc')]
         assert results == expected_card_json_lookup
 
+    def test_exception_during_lookup(self, mocker):
+        handle = mocker.Mock()
+
+        updated_card_entries = [
+            ("xyz", "xyz-name", "xyz-link")]
+        new_action_list = "new_action_list"
+        card_json_lookup = {"abc": {"id": "abc"}, "def": {"id": "def"}}
+        expected_card_json_lookup = {
+            "abc": {"id": "abc"},
+            "def": {"id": "def"}}
+        mocked_get_card_ids_from_action_list = mocker.patch(
+            "daily_run.get_card_ids_from_action_list",
+            return_value=updated_card_entries)
+
+        card_one = mocker.Mock()
+        card_one._json_obj = {"id": "xyz"}
+
+        progress_bar = mocker.Mock()
+        mocked_tqdm = mocker.patch(
+            "daily_run.tqdm",
+            return_value=progress_bar)
+        mocked_tqdm.set_description.return_value = None
+
+        handle.get_card.side_effect = trello.ResourceUnavailable("error message", type('obj', (object,), {'status_code' : '404'}))
+
+        results = daily_run.update_card_json_lookup(
+            handle, card_json_lookup, new_action_list)
+
+        mocked_get_card_ids_from_action_list.assert_called_once_with(
+            new_action_list)
+        mocked_tqdm.assert_called()
+        assert handle.mock_calls == [
+            mocker.call.get_card('xyz')]
+        assert results == expected_card_json_lookup
 
 class Test_update_action_list:
     def test_update_action_list(self, mocker):
