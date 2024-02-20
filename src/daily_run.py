@@ -215,12 +215,15 @@ def update_card_json_lookup(
 def get_card_ids_from_action_list(action_list):
     card_ids = []
     for action in action_list:
-        if action["data"].get("card"):
+        card = action["data"].get("card")
+        if card and card.get("id"):
+            card_name = card.get("name")
+            card_link = card.get("shortLink")
             card_ids.append(
                 (action["data"]["card"]["id"],
-                 action["data"]["card"]["name"],
-                 action["data"]["card"]["shortLink"]))
-    return card_ids
+                 card_name if card_name else "Name not found",
+                 card_link if card_link else "Card shortlink not found"))
+    return list(set(card_ids))
 
 
 def update_action_list(action_list, new_action_list):

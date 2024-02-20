@@ -410,6 +410,80 @@ class Test_get_card_ids_from_action_list:
         assert daily_run.get_card_ids_from_action_list(
             action_list) == expected_card_list
 
+    def test_skip_duplicate_card_ids_from_actions(self):
+        action_list = [
+            {
+                "id": 123,
+                "data": {
+                    "card": {
+                        "id": "abc-id",
+                        "name": "abc-name",
+                        "shortLink": "https://abc.com"}}},
+            {
+                "id": 456,
+                "data": {}},
+            {
+                "id": 789,
+                "data": {
+                    "card": {
+                        "id": "def-id",
+                        "name": "def-name",
+                        "shortLink": "https://def.com"}}},
+            {
+                "id": 111,
+                "data": {
+                    "card": {
+                        "id": "abc-id",
+                        "name": "abc-name",
+                        "shortLink": "https://abc.com"}}}]
+        expected_card_list = [
+            ("abc-id", "abc-name", "https://abc.com"), 
+            ("def-id", "def-name", "https://def.com")]
+
+        assert daily_run.get_card_ids_from_action_list(
+            action_list) == expected_card_list
+
+    def test_skip_incomplete_card_details_from_actions(self):
+        action_list = [
+            {
+                "id": 123,
+                "data": {
+                    "card": {
+                        "id": "abc-id",
+                        "name": "abc-name",
+                        "shortLink": "https://abc.com"}}},
+            {
+                "id": 456,
+                "data": {}},
+            {
+                "id": 222,
+                "data": {
+                    "card": {
+                        "id": "ijk-id"}}},
+            {
+                "id": 789,
+                "data": {
+                    "card": {
+                        "id": "def-id",
+                        "name": "def-name",
+                        "shortLink": "https://def.com"}}},
+            {
+                "id": 111,
+                "data": {
+                    "card": {
+                        "id": "abc-id",
+                        "name": "abc-name",
+                        "shortLink": "https://abc.com"}}}]
+        expected_card_list = [
+            ('ijk-id', 'Name not found', 'Card shortlink not found'),
+            ("abc-id", "abc-name", "https://abc.com"),
+            ("def-id", "def-name", "https://def.com")]
+
+        actual_card_list = daily_run.get_card_ids_from_action_list(
+            action_list)
+        
+        for card_entry in expected_card_list:
+            assert card_entry in actual_card_list
 
 class Test_update_card_json_lookup:
     def test_update_card_json_lookup(self, mocker):
