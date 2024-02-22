@@ -207,8 +207,9 @@ def save_card_lookup(card_json_lookup, config):
 
 def update_cards_and_actions(context, config):
     print("Looking for updates...")
-    new_action_list = retrieve_latest_actions_from_trello(
-        context["board_lookup"], config.board_name, context["action_list"][0]['id'])
+    new_action_list = []
+    # new_action_list = retrieve_latest_actions_from_trello(
+    #     context["board_lookup"], config.board_name, context["action_list"][0]['id'])
     print(f'{len(new_action_list)} new Actions found.')
     card_json_lookup = update_card_json_lookup(
         context["handle"],

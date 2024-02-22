@@ -13,8 +13,9 @@ def perform_archival(context, config):
         config.board_name,
         context["action_list"],
         config.done_list_name)
-    process_archival_job(
-        context["board_lookup"], config.archival_board_name, archival_jobs)
+    # process_archival_job(
+    #     context["board_lookup"], config.archival_board_name, archival_jobs)
+    return archival_jobs
 
 
 def find_done_card_and_create_archival_jobs(
