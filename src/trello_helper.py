@@ -1,5 +1,5 @@
 def find_list(board_lookup, board_name, list_name):
-    if not board_lookup.has_key(board_name):
+    if board_name not in board_lookup:
         return None
     lists = board_lookup[board_name].get_lists("open")
     list_lookup = {list.name: list for list in lists}
