@@ -75,15 +75,14 @@ def run():
     context["board_lookup"] = setup_board_lookup(context["handle"])
     context["list_lookup"] = setup_list_lookup(context["board_lookup"])
 
-    # if len(context["action_list"]) == 0:
-    #     first_time_load(context, config)
-    # else:
-    #     context["action_list"], context["card_json_lookup"] = \
-    #         update_cards_and_actions(context, config)
-    context["action_list"], context["card_json_lookup"] = \
-        update_cards_and_actions(context, config)
+    if len(context["action_list"]) == 0:
+        context["action_list"], _, context["card_json_lookup"] =\
+            first_time_load(context, config)
+    else:
+        context["action_list"], context["card_json_lookup"] = \
+            update_cards_and_actions(context, config)
 
-    # perform_archival(context, config)
+    perform_archival(context, config)
     perform_sync_cards(context, config)
 
 
@@ -176,14 +175,18 @@ def retrieve_all_actions_from_trello(board_lookup, board_name):
     all_actions = []
     actions = board_lookup[board_name].fetch_actions(
         {"fields", "all", "filter", action_list_str}, action_limit=1000)
+    num_of_actions_retrieved = len(actions)
     all_actions = all_actions + actions
-    print(len(actions))
-    while len(actions) == 1000:
+    time.sleep(1)
+    while num_of_actions_retrieved == 1000:
         actions = board_lookup[board_name].fetch_actions(
             {"fields", "all", "filter", action_list_str},
             action_limit=1000,
             before=all_actions[-1]['id'])
+        num_of_actions_retrieved = len(actions)
+        print(num_of_actions_retrieved)
         all_actions = all_actions + actions
+        time.sleep(1)
     return all_actions
 
 
@@ -210,9 +213,8 @@ def save_card_lookup(card_json_lookup, config):
 
 def update_cards_and_actions(context, config):
     print("Looking for updates...")
-    new_action_list = []
-    # new_action_list = retrieve_latest_actions_from_trello(
-    #     context["board_lookup"], config.board_name, context["action_list"][0]['id'])
+    new_action_list = retrieve_latest_actions_from_trello(
+        context["board_lookup"], config.board_name, context["action_list"][0]['id'])
     print(f'{len(new_action_list)} new Actions found.')
     card_json_lookup = update_card_json_lookup(
         context["handle"],

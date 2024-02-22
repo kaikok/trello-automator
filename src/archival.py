@@ -13,8 +13,8 @@ def perform_archival(context, config):
         config.board_name,
         context["action_list"],
         config.done_list_name)
-    # process_archival_job(
-    #     context["board_lookup"], config.archival_board_name, archival_jobs)
+    process_archival_job(
+        context["board_lookup"], config.archival_board_name, archival_jobs)
     return archival_jobs
 
 
@@ -42,6 +42,8 @@ def create_card_action_list_lookup(action_list):
                 card_action_list_lookup[card_id].append(action)
             else:
                 card_action_list_lookup[card_id] = [action]
+    print(len(action_list))
+    print(len(card_action_list_lookup))
     return card_action_list_lookup
 
 
