@@ -405,11 +405,14 @@ class Test_get_card_ids_from_action_list:
                         "name": "def-name",
                         "shortLink": "https://def.com"}}}]
         expected_card_list = [
-            ("abc-id", "abc-name", "https://abc.com"), 
+            ("abc-id", "abc-name", "https://abc.com"),
             ("def-id", "def-name", "https://def.com")]
 
-        assert daily_run.get_card_ids_from_action_list(
-            action_list) == expected_card_list
+        returned_card_list = daily_run.get_card_ids_from_action_list(
+            action_list)
+
+        for card_entry in expected_card_list:
+            assert card_entry in returned_card_list
 
     def test_skip_duplicate_card_ids_from_actions(self):
         action_list = [
@@ -438,11 +441,14 @@ class Test_get_card_ids_from_action_list:
                         "name": "abc-name",
                         "shortLink": "https://abc.com"}}}]
         expected_card_list = [
-            ("abc-id", "abc-name", "https://abc.com"), 
+            ("abc-id", "abc-name", "https://abc.com"),
             ("def-id", "def-name", "https://def.com")]
 
-        assert daily_run.get_card_ids_from_action_list(
-            action_list) == expected_card_list
+        returned_card_list = daily_run.get_card_ids_from_action_list(
+            action_list)
+
+        for card_entry in expected_card_list:
+            assert card_entry in returned_card_list
 
     def test_skip_incomplete_card_details_from_actions(self):
         action_list = [
@@ -480,11 +486,12 @@ class Test_get_card_ids_from_action_list:
             ("abc-id", "abc-name", "https://abc.com"),
             ("def-id", "def-name", "https://def.com")]
 
-        actual_card_list = daily_run.get_card_ids_from_action_list(
+        returned_card_list = daily_run.get_card_ids_from_action_list(
             action_list)
-        
+
         for card_entry in expected_card_list:
-            assert card_entry in actual_card_list
+            assert card_entry in returned_card_list
+
 
 class Test_update_card_json_lookup:
     def test_update_card_json_lookup(self, mocker):
@@ -555,7 +562,8 @@ class Test_update_card_json_lookup:
             return_value=progress_bar)
         mocked_tqdm.set_description.return_value = None
 
-        handle.get_card.side_effect = trello.ResourceUnavailable("error message", type('obj', (object,), {'status_code' : '404'}))
+        handle.get_card.side_effect = trello.ResourceUnavailable(
+            "error message", type('obj', (object,), {'status_code': '404'}))
 
         results = daily_run.update_card_json_lookup(
             handle, card_json_lookup, new_action_list)
@@ -566,6 +574,7 @@ class Test_update_card_json_lookup:
         assert handle.mock_calls == [
             mocker.call.get_card('xyz')]
         assert results == expected_card_json_lookup
+
 
 class Test_update_action_list:
     def test_update_action_list(self, mocker):

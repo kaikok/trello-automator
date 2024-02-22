@@ -119,7 +119,7 @@ These settings are to be added to the JSON config file specified by the environm
 ### How to running Linting?
 
 ```bash
-autopep8 --in-place -r tests/*.py *.py
+autopep8 --in-place -r tests/*.py src/*.py
 ```
 
 ### How to run unit tests?

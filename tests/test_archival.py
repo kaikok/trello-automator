@@ -239,7 +239,7 @@ class Test_get_move_to_done_list_date:
                       "date": move_date}]}
         assert archival.get_move_to_done_list_date(
             card_action_list_lookup, card_id, done_list_id) == move_date
-        
+
     def test_date_found_for_moveCardToBoard_type(self, mocker):
         card_id = "card-id-123"
         done_list_id = "done-list-id-456"
