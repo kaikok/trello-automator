@@ -669,7 +669,7 @@ class Test_run:
             return_value="list_lookup")
         mocked_first_time_load = mocker.patch(
             "daily_run.first_time_load",
-            return_value=None)
+            return_value=(action_list, {}, card_json_lookup))
         mocked_update_cards_and_actions = mocker.patch(
             "daily_run.update_cards_and_actions",
             return_value=None)
