@@ -75,11 +75,14 @@ def run():
     context["board_lookup"] = setup_board_lookup(context["handle"])
     context["list_lookup"] = setup_list_lookup(context["board_lookup"])
 
-    if len(context["action_list"]) == 0:
-        first_time_load(context, config)
-    else:
-        context["action_list"], context["card_json_lookup"] = \
-            update_cards_and_actions(context, config)
+    # if len(context["action_list"]) == 0:
+    #     first_time_load(context, config)
+    # else:
+    #     context["action_list"], context["card_json_lookup"] = \
+    #         update_cards_and_actions(context, config)
+    context["action_list"], context["card_json_lookup"] = \
+        update_cards_and_actions(context, config)
+
     perform_archival(context, config)
     perform_sync_cards(context, config)
 
