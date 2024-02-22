@@ -83,7 +83,7 @@ def run():
     context["action_list"], context["card_json_lookup"] = \
         update_cards_and_actions(context, config)
 
-    perform_archival(context, config)
+    # perform_archival(context, config)
     perform_sync_cards(context, config)
 
 
