@@ -7,12 +7,12 @@ from daily_run import init_trello_conn, setup_board_lookup, setup_list_lookup
 
 
 def patched_fetch_json(self,
-            uri_path,
-            http_method='GET',
-            headers=None,
-            query_params=None,
-            post_args=None,
-            files=None):
+                       uri_path,
+                       http_method='GET',
+                       headers=None,
+                       query_params=None,
+                       post_args=None,
+                       files=None):
     """ Fetch some JSON from Trello """
 
     # explicit values here to avoid mutable default values
@@ -45,14 +45,15 @@ def patched_fetch_json(self,
 
     # perform the HTTP requests, if possible uses OAuth authentication
     response = self.http_service.request(http_method, url, params=query_params,
-                                            headers=headers, data=data,
-                                            auth=self.oauth, files=files,
-                                            proxies=self.proxies)
+                                         headers=headers, data=data,
+                                         auth=self.oauth, files=files,
+                                         proxies=self.proxies)
 
     if response.status_code == 401:
         raise trello.Unauthorized("%s at %s" % (response.text, url), response)
     if response.status_code != 200:
-        raise trello.ResourceUnavailable("%s at %s" % (response.text, url), response)
+        raise trello.ResourceUnavailable(
+            "%s at %s" % (response.text, url), response)
 
     return response.json()
 
